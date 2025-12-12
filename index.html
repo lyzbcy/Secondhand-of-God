@@ -340,11 +340,41 @@
 
     <!-- Pause Modal -->
     <div id="pause-modal" class="modal hidden">
-        <div class="modal-content">
-            <h2>游戏暂停</h2>
+        <div class="modal-content pause-content">
+            <div class="pause-header">
+                <div class="pause-icon">⏸️</div>
+                <h2>游戏暂停</h2>
+                <p class="pause-subtitle">时间已凝固...</p>
+            </div>
+            <div class="pause-stats">
+                <div class="pause-stat">
+                    <span class="pause-stat-icon">📅</span>
+                    <span class="pause-stat-label">当前天数</span>
+                    <span class="pause-stat-value" id="pause-day">1</span>
+                </div>
+                <div class="pause-stat">
+                    <span class="pause-stat-icon">💀</span>
+                    <span class="pause-stat-label">击杀数</span>
+                    <span class="pause-stat-value" id="pause-kills">0</span>
+                </div>
+                <div class="pause-stat">
+                    <span class="pause-stat-icon">🏰</span>
+                    <span class="pause-stat-label">防御塔</span>
+                    <span class="pause-stat-value" id="pause-towers">0</span>
+                </div>
+            </div>
             <div class="pause-buttons">
-                <button class="menu-btn primary" id="btn-resume">▶️ 继续游戏</button>
-                <button class="menu-btn" id="btn-quit">🚪 退出游戏</button>
+                <button class="menu-btn primary glow" id="btn-resume">
+                    <span class="btn-icon">▶️</span>
+                    <span class="btn-text">继续战斗</span>
+                </button>
+                <button class="menu-btn" id="btn-quit">
+                    <span class="btn-icon">🚪</span>
+                    <span class="btn-text">退出游戏</span>
+                </button>
+            </div>
+            <div class="pause-tips">
+                <p>💡 提示：双手合十可释放终极技能</p>
             </div>
         </div>
     </div>

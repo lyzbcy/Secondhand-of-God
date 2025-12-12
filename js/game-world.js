@@ -357,7 +357,17 @@ class GameWorld {
 
     togglePause() {
         this.isPaused = !this.isPaused;
-        document.getElementById('pause-modal').classList.toggle('hidden', !this.isPaused);
+        const pauseModal = document.getElementById('pause-modal');
+
+        if (this.isPaused) {
+            // 更新暂停界面统计数据
+            document.getElementById('pause-day').textContent = this.day;
+            document.getElementById('pause-kills').textContent = this.stats.enemiesKilled;
+            document.getElementById('pause-towers').textContent = this.stats.towersBuilt;
+            pauseModal.classList.remove('hidden');
+        } else {
+            pauseModal.classList.add('hidden');
+        }
     }
 
     restart() {

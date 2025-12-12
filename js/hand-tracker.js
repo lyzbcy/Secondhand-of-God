@@ -115,9 +115,15 @@ class HandTracker {
 
     convertToScreenCoords(landmarks) {
         // 镜像X坐标，使手部追踪与摄像头画面一致
+        // 使用 window 尺寸确保映射到整个屏幕
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight;
         return landmarks.map(lm => ({
-            x: (1 - lm.x) * this.canvasElement.width, y: lm.y * this.canvasElement.height,
-            z: lm.z, nx: 1 - lm.x, ny: lm.y
+            x: (1 - lm.x) * screenWidth,
+            y: lm.y * screenHeight,
+            z: lm.z,
+            nx: 1 - lm.x,
+            ny: lm.y
         }));
     }
 
