@@ -19,7 +19,7 @@ class HandTracker {
 
         this.config = {
             minConfidence: 0.7,
-            pinchThreshold: 0.08,
+            pinchThreshold: 0.12,  // 放宽捏合检测阈值 (原0.08)
             gestureCooldown: 300
         };
 
@@ -202,7 +202,13 @@ class HandTracker {
 
     isOpenPalm(lm) { return this.getExtendedFingers(lm).filter(Boolean).length >= 4; }
     isFist(lm) { return this.getExtendedFingers(lm).filter(Boolean).length <= 1; }
-    isPinching(lm) { return Utils.distance(lm[4].x, lm[4].y, lm[8].x, lm[8].y) < this.config.pinchThreshold; }
+
+    // 捏合检测：拇指和食指或中指靠近都算捏合
+    isPinching(lm) {
+        const thumbToIndex = Utils.distance(lm[4].x, lm[4].y, lm[8].x, lm[8].y);
+        const thumbToMiddle = Utils.distance(lm[4].x, lm[4].y, lm[12].x, lm[12].y);
+        return thumbToIndex < this.config.pinchThreshold || thumbToMiddle < this.config.pinchThreshold * 1.2;
+    }
 
     getExtendedFingers(lm) {
         return [4, 8, 12, 16, 20].map((tipIdx, i) => {
