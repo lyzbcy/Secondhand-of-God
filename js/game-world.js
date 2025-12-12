@@ -230,7 +230,7 @@ class GameWorld {
         this.day++;
 
         document.getElementById('day-count').textContent = `第 ${this.day} 天`;
-        this.cards.showCardSelection();
+        this.showCardSelectionWithPause();
     }
 
     resumeAfterCard() {
@@ -238,6 +238,14 @@ class GameWorld {
             const res = Utils.randomChoice(['wood', 'stone', 'crystal']);
             this.resources.addResource(res, Utils.randomInt(5, 15));
         }
+        // 恢复游戏
+        this.isPaused = false;
+    }
+
+    showCardSelectionWithPause() {
+        // 暂停游戏
+        this.isPaused = true;
+        this.cards.showCardSelection();
     }
 
     render() {

@@ -56,6 +56,22 @@ class HandTracker {
     async startTracking() {
         if (!this.isInitialized) return false;
         try {
+            // 获取用户选择的摄像头
+            const settings = Utils.storage.load('godhand_settings', { cameraId: 'user' });
+            const cameraId = settings.cameraId || 'user';
+
+            // 构建视频约束
+            let videoConstraints = { width: 1280, height: 720 };
+            if (cameraId === 'user' || cameraId === 'environment') {
+                videoConstraints.facingMode = cameraId;
+            } else {
+                videoConstraints.deviceId = { exact: cameraId };
+            }
+
+            // 先获取媒体流
+            const stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
+            this.videoElement.srcObject = stream;
+
             this.camera = new Camera(this.videoElement, {
                 onFrame: async () => {
                     if (this.hands && this.isTracking) {
@@ -66,6 +82,7 @@ class HandTracker {
             });
             await this.camera.start();
             this.isTracking = true;
+            console.log('[Camera] Started with:', cameraId);
             return true;
         } catch (error) {
             console.error('Camera start failed:', error);

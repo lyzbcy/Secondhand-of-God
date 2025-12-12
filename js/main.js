@@ -100,6 +100,51 @@ class Game {
         document.getElementById('btn-tutorial')?.addEventListener('click', () => this.showTutorial());
         document.getElementById('btn-settings')?.addEventListener('click', () => this.showSettings());
         document.getElementById('btn-save-settings')?.addEventListener('click', () => this.saveSettings());
+        document.getElementById('btn-refresh-cameras')?.addEventListener('click', () => this.refreshCameraList());
+    }
+
+    async refreshCameraList() {
+        const select = document.getElementById('camera-select');
+        if (!select) return;
+
+        try {
+            // 请求权限以获取设备列表
+            await navigator.mediaDevices.getUserMedia({ video: true });
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(d => d.kind === 'videoinput');
+
+            // 保存当前选择
+            const currentValue = select.value;
+
+            // 清空并重新填充
+            select.innerHTML = '';
+
+            // 添加默认选项
+            const frontOption = document.createElement('option');
+            frontOption.value = 'user';
+            frontOption.textContent = '前置摄像头 (自动)';
+            select.appendChild(frontOption);
+
+            const backOption = document.createElement('option');
+            backOption.value = 'environment';
+            backOption.textContent = '后置摄像头 (自动)';
+            select.appendChild(backOption);
+
+            // 添加具体设备
+            videoDevices.forEach((device, index) => {
+                const option = document.createElement('option');
+                option.value = device.deviceId;
+                option.textContent = device.label || `摄像头 ${index + 1}`;
+                select.appendChild(option);
+            });
+
+            // 恢复选择
+            if (currentValue) select.value = currentValue;
+
+            console.log('[Camera] Found devices:', videoDevices.length);
+        } catch (error) {
+            console.error('[Camera] Failed to enumerate devices:', error);
+        }
     }
 
     setupTutorial() {
@@ -155,7 +200,8 @@ class Game {
             bgmVolume: document.getElementById('bgm-volume')?.value || 60,
             gestureSensitivity: document.getElementById('gesture-sensitivity')?.value || 5,
             showHandSkeleton: document.getElementById('show-hand-skeleton')?.checked ?? true,
-            showCameraFeed: document.getElementById('show-camera-feed')?.checked ?? true
+            showCameraFeed: document.getElementById('show-camera-feed')?.checked ?? true,
+            cameraId: document.getElementById('camera-select')?.value || 'user'
         };
 
         Utils.storage.save('godhand_settings', settings);
@@ -174,6 +220,7 @@ class Game {
         if (settings.gestureSensitivity) document.getElementById('gesture-sensitivity').value = settings.gestureSensitivity;
         if (settings.showHandSkeleton !== undefined) document.getElementById('show-hand-skeleton').checked = settings.showHandSkeleton;
         if (settings.showCameraFeed !== undefined) document.getElementById('show-camera-feed').checked = settings.showCameraFeed;
+        if (settings.cameraId) document.getElementById('camera-select').value = settings.cameraId;
     }
 
     async startGame() {

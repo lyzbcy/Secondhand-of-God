@@ -487,6 +487,32 @@ body {
     accent-color: var(--primary);
 }
 
+.settings-group select {
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    min-width: 160px;
+}
+
+.settings-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.settings-group select option {
+    background: var(--bg-dark);
+    color: var(--text-primary);
+}
+
+#btn-refresh-cameras {
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+}
+
 /* ===================================
    Game Container
    =================================== */

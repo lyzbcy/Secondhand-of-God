@@ -145,7 +145,15 @@
                     <input type="checkbox" id="show-camera-feed" checked>
                     <span>显示摄像头画面</span>
                 </label>
+                <label>
+                    <span>选择摄像头</span>
+                    <select id="camera-select">
+                        <option value="user">前置摄像头</option>
+                        <option value="environment">后置摄像头</option>
+                    </select>
+                </label>
             </div>
+            <button class="menu-btn" id="btn-refresh-cameras">🔄 刷新摄像头列表</button>
             <button class="menu-btn primary" id="btn-save-settings">保存设置</button>
         </div>
     </div>
