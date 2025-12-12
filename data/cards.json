@@ -1,0 +1,197 @@
+{
+    "cards": {
+        "fury": [
+            {
+                "id": "iron_palm",
+                "name": "铁砂掌",
+                "icon": "🖐️",
+                "rarity": "common",
+                "description": "手掌攻击范围增加50%",
+                "effect": {
+                    "handRange": 1.5
+                }
+            },
+            {
+                "id": "thunder_fist",
+                "name": "雷神之锤",
+                "icon": "⚡",
+                "rarity": "rare",
+                "description": "握拳锤击附带闪电伤害",
+                "effect": {
+                    "punchLightning": true
+                }
+            },
+            {
+                "id": "gold_touch",
+                "name": "点石成金",
+                "icon": "💰",
+                "rarity": "epic",
+                "description": "击杀敌人获得双倍金币",
+                "effect": {
+                    "goldMultiplier": 2
+                }
+            },
+            {
+                "id": "berserker",
+                "name": "狂暴之心",
+                "icon": "💢",
+                "rarity": "legendary",
+                "description": "攻击速度翻倍，但受伤也加倍",
+                "effect": {
+                    "attackSpeedMulti": 2,
+                    "damageTakenMulti": 2
+                }
+            }
+        ],
+        "commander": [
+            {
+                "id": "overcharge",
+                "name": "手动充能",
+                "icon": "🔋",
+                "rarity": "common",
+                "description": "触碰防御塔时攻速翻倍3秒",
+                "effect": {
+                    "towerBoost": true
+                }
+            },
+            {
+                "id": "resonance",
+                "name": "共鸣水晶",
+                "icon": "💠",
+                "rarity": "rare",
+                "description": "水晶可发射激光协助攻击",
+                "effect": {
+                    "crystalAttack": true
+                }
+            },
+            {
+                "id": "thorns",
+                "name": "荆棘护盾",
+                "icon": "🛡️",
+                "rarity": "epic",
+                "description": "反弹50%伤害给攻击者",
+                "effect": {
+                    "thornsDamage": 0.5
+                }
+            },
+            {
+                "id": "tower_master",
+                "name": "塔防大师",
+                "icon": "🏰",
+                "rarity": "legendary",
+                "description": "所有防御塔攻击力+100%",
+                "effect": {
+                    "towerDamageMulti": 2
+                }
+            }
+        ],
+        "tycoon": [
+            {
+                "id": "lumberjack",
+                "name": "伐木机",
+                "icon": "🪓",
+                "rarity": "common",
+                "description": "砍树效率提升3倍",
+                "effect": {
+                    "chopMulti": 3
+                }
+            },
+            {
+                "id": "miner",
+                "name": "矿工精神",
+                "icon": "⛏️",
+                "rarity": "common",
+                "description": "挖矿效率提升2倍",
+                "effect": {
+                    "mineMulti": 2
+                }
+            },
+            {
+                "id": "airdrop",
+                "name": "空投补给",
+                "icon": "📦",
+                "rarity": "rare",
+                "description": "每波开始获得随机资源",
+                "effect": {
+                    "waveBonus": true
+                }
+            },
+            {
+                "id": "auto_turret",
+                "name": "自动炮台",
+                "icon": "🤖",
+                "rarity": "epic",
+                "description": "消耗100木材召唤临时炮台",
+                "effect": {
+                    "autoTurret": true
+                }
+            }
+        ]
+    },
+    "enemies": {
+        "goblin": {
+            "name": "小鬼",
+            "hp": 30,
+            "speed": 60,
+            "damage": 5,
+            "reward": 5
+        },
+        "skeleton": {
+            "name": "骷髅",
+            "hp": 50,
+            "speed": 45,
+            "damage": 8,
+            "reward": 8
+        },
+        "hedgehog": {
+            "name": "刺猬怪",
+            "hp": 40,
+            "speed": 50,
+            "damage": 6,
+            "reward": 10
+        },
+        "ghost": {
+            "name": "幽灵",
+            "hp": 35,
+            "speed": 70,
+            "damage": 7,
+            "reward": 12
+        },
+        "ogre": {
+            "name": "攻城巨兽",
+            "hp": 200,
+            "speed": 25,
+            "damage": 25,
+            "reward": 30
+        }
+    },
+    "towers": {
+        "arrow": {
+            "name": "箭塔",
+            "damage": 15,
+            "range": 150,
+            "attackSpeed": 1.0
+        },
+        "fire": {
+            "name": "火焰塔",
+            "damage": 8,
+            "range": 100,
+            "attackSpeed": 0.5,
+            "aoe": true
+        },
+        "ice": {
+            "name": "冰霜塔",
+            "damage": 10,
+            "range": 120,
+            "attackSpeed": 0.8,
+            "slow": 0.5
+        },
+        "lightning": {
+            "name": "雷电塔",
+            "damage": 25,
+            "range": 180,
+            "attackSpeed": 0.4,
+            "chain": 3
+        }
+    }
+}

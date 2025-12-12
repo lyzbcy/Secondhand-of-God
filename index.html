@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>神之手：最后的防线 | God Hand: Last Defense</title>
+    <meta name="description" content="一款基于手势控制的塔防肉鸽游戏，用你的双手守护最后的水晶！">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- MediaPipe Hands -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loader-container">
+            <div class="hand-icon">🖐️</div>
+            <h1>神之手：最后的防线</h1>
+            <p class="subtitle">God Hand: Last Defense</p>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+            <p id="loading-status">正在初始化...</p>
+        </div>
+    </div>
+
+    <!-- Start Menu -->
+    <div id="start-menu" class="hidden">
+        <div class="menu-container">
+            <div class="title-section">
+                <h1 class="game-title">神之手</h1>
+                <h2 class="game-subtitle">最后的防线</h2>
+            </div>
+            <div class="menu-buttons">
+                <button id="btn-start" class="menu-btn primary">
+                    <span class="btn-icon">⚔️</span>
+                    <span class="btn-text">开始游戏</span>
+                </button>
+                <button id="btn-tutorial" class="menu-btn">
+                    <span class="btn-icon">📖</span>
+                    <span class="btn-text">操作教程</span>
+                </button>
+                <button id="btn-settings" class="menu-btn">
+                    <span class="btn-icon">⚙️</span>
+                    <span class="btn-text">设置</span>
+                </button>
+            </div>
+            <div class="camera-preview">
+                <p>摄像头预览</p>
+                <video id="preview-video" autoplay playsinline></video>
+                <div id="hand-status">等待检测手部...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tutorial Modal -->
+    <div id="tutorial-modal" class="modal hidden">
+        <div class="modal-content tutorial-content">
+            <button class="modal-close">&times;</button>
+            <h2>操作指南</h2>
+            <div class="tutorial-slides">
+                <div class="tutorial-slide active" data-slide="0">
+                    <div class="gesture-demo">
+                        <div class="gesture-icon">🖐️➡️✊</div>
+                    </div>
+                    <h3>手刀劈砍</h3>
+                    <p>竖起手掌，快速向下挥动，劈砍树木获取木材</p>
+                </div>
+                <div class="tutorial-slide" data-slide="1">
+                    <div class="gesture-demo">
+                        <div class="gesture-icon">✊💥</div>
+                    </div>
+                    <h3>握拳锤击</h3>
+                    <p>握紧拳头，向前冲击，粉碎岩石获取矿石</p>
+                </div>
+                <div class="tutorial-slide" data-slide="2">
+                    <div class="gesture-demo">
+                        <div class="gesture-icon">🤏📦</div>
+                    </div>
+                    <h3>捏合拖拽</h3>
+                    <p>拇指食指捏合，拖拽卡片建造防御塔</p>
+                </div>
+                <div class="tutorial-slide" data-slide="3">
+                    <div class="gesture-demo">
+                        <div class="gesture-icon">🖐️👋</div>
+                    </div>
+                    <h3>拍击扫荡</h3>
+                    <p>张开手掌拍击敌人，或横扫将敌人扫飞</p>
+                </div>
+                <div class="tutorial-slide" data-slide="4">
+                    <div class="gesture-demo">
+                        <div class="gesture-icon">🙏✨</div>
+                    </div>
+                    <h3>双手合十</h3>
+                    <p>能量充满时双手合十，释放毁灭性大招</p>
+                </div>
+            </div>
+            <div class="tutorial-nav">
+                <button class="tutorial-prev">◀ 上一步</button>
+                <div class="tutorial-dots"></div>
+                <button class="tutorial-next">下一步 ▶</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2>游戏设置</h2>
+            <div class="settings-group">
+                <label>
+                    <span>音效音量</span>
+                    <input type="range" id="sfx-volume" min="0" max="100" value="80">
+                </label>
+                <label>
+                    <span>背景音乐</span>
+                    <input type="range" id="bgm-volume" min="0" max="100" value="60">
+                </label>
+                <label>
+                    <span>手势灵敏度</span>
+                    <input type="range" id="gesture-sensitivity" min="1" max="10" value="5">
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="show-hand-skeleton" checked>
+                    <span>显示手部骨骼</span>
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="show-camera-feed" checked>
+                    <span>显示摄像头画面</span>
+                </label>
+            </div>
+            <button class="menu-btn primary" id="btn-save-settings">保存设置</button>
+        </div>
+    </div>
+
+    <!-- Main Game Container -->
+    <div id="game-container" class="hidden">
+        <!-- Camera Feed (Background) -->
+        <video id="camera-video" autoplay playsinline></video>
+        <canvas id="hand-canvas"></canvas>
+        
+        <!-- Game Canvas -->
+        <canvas id="game-canvas"></canvas>
+        
+        <!-- HUD -->
+        <div id="hud">
+            <!-- Top Bar -->
+            <div class="hud-top">
+                <div class="day-cycle">
+                    <div class="cycle-icon" id="cycle-icon">☀️</div>
+                    <div class="cycle-info">
+                        <span id="day-count">第 1 天</span>
+                        <div class="time-bar">
+                            <div class="time-progress" id="time-progress"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="wave-info" id="wave-info">
+                    <span class="wave-label">休整阶段</span>
+                </div>
+                <button class="hud-btn" id="btn-pause">⏸️</button>
+            </div>
+            
+            <!-- Resources -->
+            <div class="hud-resources">
+                <div class="resource" id="res-wood">
+                    <span class="res-icon">🪵</span>
+                    <span class="res-value">0</span>
+                </div>
+                <div class="resource" id="res-stone">
+                    <span class="res-icon">🪨</span>
+                    <span class="res-value">0</span>
+                </div>
+                <div class="resource" id="res-crystal">
+                    <span class="res-icon">💎</span>
+                    <span class="res-value">0</span>
+                </div>
+                <div class="resource" id="res-gold">
+                    <span class="res-icon">🪙</span>
+                    <span class="res-value">0</span>
+                </div>
+            </div>
+            
+            <!-- Crystal Health -->
+            <div class="hud-crystal">
+                <div class="crystal-icon">💠</div>
+                <div class="crystal-health-bar">
+                    <div class="crystal-health" id="crystal-health"></div>
+                </div>
+                <span class="crystal-hp" id="crystal-hp">100/100</span>
+            </div>
+            
+            <!-- Ultimate Gauge -->
+            <div class="hud-ultimate">
+                <div class="ultimate-icon">⚡</div>
+                <div class="ultimate-bar">
+                    <div class="ultimate-progress" id="ultimate-progress"></div>
+                </div>
+                <span class="ultimate-hint">双手合十释放</span>
+            </div>
+        </div>
+        
+        <!-- Tower Selection Panel -->
+        <div id="tower-panel">
+            <div class="tower-card" data-tower="arrow">
+                <div class="tower-icon">🏹</div>
+                <div class="tower-name">箭塔</div>
+                <div class="tower-cost">
+                    <span>🪵10</span>
+                </div>
+            </div>
+            <div class="tower-card" data-tower="fire">
+                <div class="tower-icon">🔥</div>
+                <div class="tower-name">火焰塔</div>
+                <div class="tower-cost">
+                    <span>🪵15</span>
+                    <span>🪨5</span>
+                </div>
+            </div>
+            <div class="tower-card" data-tower="ice">
+                <div class="tower-icon">❄️</div>
+                <div class="tower-name">冰霜塔</div>
+                <div class="tower-cost">
+                    <span>🪵10</span>
+                    <span>💎10</span>
+                </div>
+            </div>
+            <div class="tower-card" data-tower="lightning">
+                <div class="tower-icon">⚡</div>
+                <div class="tower-name">雷电塔</div>
+                <div class="tower-cost">
+                    <span>💎20</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Gesture Feedback -->
+        <div id="gesture-feedback" class="hidden">
+            <div class="gesture-name"></div>
+        </div>
+        
+        <!-- Damage Numbers Container -->
+        <div id="damage-numbers"></div>
+    </div>
+
+    <!-- Card Selection Modal (Roguelike) -->
+    <div id="card-modal" class="modal hidden">
+        <div class="modal-content card-selection">
+            <h2>选择神格强化</h2>
+            <p class="card-subtitle">黎明降临，神力觉醒</p>
+            <div class="card-options" id="card-options">
+                <!-- Cards will be dynamically inserted -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="gameover-modal" class="modal hidden">
+        <div class="modal-content gameover-content">
+            <h2 id="gameover-title">水晶陨落</h2>
+            <div class="gameover-stats">
+                <div class="stat">
+                    <span class="stat-label">存活天数</span>
+                    <span class="stat-value" id="stat-days">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">击杀敌人</span>
+                    <span class="stat-value" id="stat-kills">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">建造防御塔</span>
+                    <span class="stat-value" id="stat-towers">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">获得神格</span>
+                    <span class="stat-value" id="stat-cards">0</span>
+                </div>
+            </div>
+            <div class="gameover-buttons">
+                <button class="menu-btn primary" id="btn-restart">🔄 再来一次</button>
+                <button class="menu-btn" id="btn-to-menu">🏠 返回主菜单</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pause Modal -->
+    <div id="pause-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>游戏暂停</h2>
+            <div class="pause-buttons">
+                <button class="menu-btn primary" id="btn-resume">▶️ 继续游戏</button>
+                <button class="menu-btn" id="btn-quit">🚪 退出游戏</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/hand-tracker.js"></script>
+    <script src="js/effects.js"></script>
+    <script src="js/resource-system.js"></script>
+    <script src="js/tower-system.js"></script>
+    <script src="js/enemy-system.js"></script>
+    <script src="js/combat-system.js"></script>
+    <script src="js/card-system.js"></script>
+    <script src="js/game-world.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
