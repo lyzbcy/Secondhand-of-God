@@ -219,9 +219,9 @@ class HandTracker {
         const conn = [[0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8], [0, 9], [9, 10], [10, 11], [11, 12], [0, 13], [13, 14], [14, 15], [15, 16], [0, 17], [17, 18], [18, 19], [19, 20], [5, 9], [9, 13], [13, 17]];
         const ctx = this.canvasCtx, color = handedness === 'Left' ? '#00d4ff' : '#ff6b35';
         ctx.strokeStyle = color; ctx.lineWidth = 3;
-        // 镜像X坐标绘制
-        conn.forEach(([i, j]) => { ctx.beginPath(); ctx.moveTo((1 - landmarks[i].x) * this.canvasElement.width, landmarks[i].y * this.canvasElement.height); ctx.lineTo((1 - landmarks[j].x) * this.canvasElement.width, landmarks[j].y * this.canvasElement.height); ctx.stroke(); });
-        landmarks.forEach((lm, idx) => { ctx.beginPath(); ctx.arc((1 - lm.x) * this.canvasElement.width, lm.y * this.canvasElement.height, idx === 0 ? 8 : 5, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill(); });
+        // 不做代码镜像，因为hand-canvas有CSS scaleX(-1)
+        conn.forEach(([i, j]) => { ctx.beginPath(); ctx.moveTo(landmarks[i].x * this.canvasElement.width, landmarks[i].y * this.canvasElement.height); ctx.lineTo(landmarks[j].x * this.canvasElement.width, landmarks[j].y * this.canvasElement.height); ctx.stroke(); });
+        landmarks.forEach((lm, idx) => { ctx.beginPath(); ctx.arc(lm.x * this.canvasElement.width, lm.y * this.canvasElement.height, idx === 0 ? 8 : 5, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill(); });
     }
 
     on(event, callback) { this.callbacks[event] = callback; }
