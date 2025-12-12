@@ -1126,41 +1126,317 @@ body {
 /* ===================================
    Responsive Design
    =================================== */
+
+/* 平板和小屏幕 */
+@media (max-width: 1024px) {
+    .hud-resources {
+        top: 80px;
+    }
+
+    .hud-crystal {
+        top: 80px;
+    }
+}
+
+/* 手机端 */
 @media (max-width: 768px) {
     .game-title {
-        font-size: 3rem;
+        font-size: 2.5rem;
     }
 
     .game-subtitle {
-        font-size: 1rem;
+        font-size: 0.9rem;
     }
 
     .menu-btn {
-        min-width: 220px;
-        padding: 15px 30px;
+        min-width: 200px;
+        padding: 12px 24px;
+        font-size: 0.95rem;
     }
 
-    #tower-panel {
+    /* HUD 优化 */
+    .hud-top {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+    }
+
+    .day-cycle {
+        padding: 8px 12px;
+        border-radius: 12px;
+    }
+
+    .cycle-icon {
+        font-size: 1.5rem;
+    }
+
+    #day-count {
+        font-size: 0.85rem;
+    }
+
+    .time-bar {
+        width: 80px;
+    }
+
+    .wave-info {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+
+    .hud-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+
+    /* 资源栏 - 横向排列在顶部 */
+    .hud-resources {
+        top: 60px;
+        left: 10px;
+        flex-direction: row;
         flex-wrap: wrap;
-        max-width: 90vw;
+        gap: 6px;
+    }
+
+    .resource {
+        padding: 6px 10px;
+        min-width: auto;
+        border-radius: 8px;
+    }
+
+    .res-icon {
+        font-size: 1rem;
+    }
+
+    .res-value {
+        font-size: 0.9rem;
+    }
+
+    /* 水晶血条 */
+    .hud-crystal {
+        top: 60px;
+        right: 10px;
+        padding: 8px 12px;
+        border-radius: 12px;
+    }
+
+    .crystal-icon {
+        font-size: 1.5rem;
+    }
+
+    .crystal-health-bar {
+        width: 80px;
+        height: 12px;
+    }
+
+    .crystal-hp {
+        font-size: 0.75rem;
+    }
+
+    /* 防御塔面板 */
+    #tower-panel {
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 8px;
+        gap: 6px;
+        border-radius: 12px;
+        max-width: 95vw;
     }
 
     .tower-card {
-        padding: 10px 15px;
+        padding: 8px 10px;
+        min-width: 70px;
+        border-radius: 10px;
     }
 
     .tower-icon {
-        font-size: 2rem;
+        font-size: 1.6rem;
     }
 
+    .tower-name {
+        font-size: 0.7rem;
+    }
+
+    .tower-cost {
+        font-size: 0.65rem;
+        gap: 3px;
+    }
+
+    /* 升级卡片 */
     .card-options {
         flex-direction: column;
         align-items: center;
+        gap: 10px;
     }
 
     .upgrade-card {
-        width: 100%;
+        width: 90%;
         max-width: 280px;
+        padding: 15px;
+    }
+
+    /* 大招槽 */
+    .hud-ultimate {
+        bottom: 80px;
+        padding: 10px 20px;
+        border-radius: 20px;
+    }
+
+    .ultimate-icon {
+        font-size: 1.5rem;
+    }
+
+    .ultimate-bar {
+        width: 120px;
+        height: 10px;
+    }
+
+    .ultimate-hint {
+        font-size: 0.7rem;
+    }
+
+    /* RL 调试面板 - 在手机上默认折叠并缩小 */
+    #rl-debug-panel {
+        bottom: 80px;
+        left: 10px;
+        min-width: 180px;
+        font-size: 0.75rem;
+        max-height: 40vh;
+        overflow-y: auto;
+    }
+
+    .rl-debug-header {
+        padding: 8px 12px;
+    }
+
+    .rl-debug-content {
+        padding: 8px 12px;
+    }
+
+    /* 默认折叠 RL 面板 */
+    .rl-debug-content {
+        display: none;
+    }
+
+    #rl-debug-toggle {
+        transform: rotate(-90deg);
+    }
+
+    .rl-btn {
+        padding: 6px 8px;
+        font-size: 0.65rem;
+    }
+
+    /* 暂停弹窗 */
+    .pause-content {
+        min-width: 90vw;
+        max-width: 350px;
+        padding: 25px;
+    }
+
+    .pause-icon {
+        font-size: 3rem;
+    }
+
+    .pause-header h2 {
+        font-size: 1.8rem;
+    }
+
+    .pause-stats {
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 12px;
+    }
+
+    .pause-stat {
+        padding: 10px 15px;
+    }
+
+    .pause-stat-value {
+        font-size: 1.4rem;
+    }
+
+    /* 手势反馈 */
+    #gesture-feedback {
+        font-size: 0.9rem;
+    }
+}
+
+/* 超小屏幕 (iPhone SE 等) */
+@media (max-width: 375px) {
+    .game-title {
+        font-size: 2rem;
+    }
+
+    .hud-resources {
+        gap: 4px;
+    }
+
+    .resource {
+        padding: 4px 8px;
+    }
+
+    .tower-card {
+        padding: 6px 8px;
+        min-width: 60px;
+    }
+
+    .tower-icon {
+        font-size: 1.4rem;
+    }
+
+    /* 隐藏 RL 调试面板在超小屏 */
+    #rl-debug-panel {
+        display: none;
+    }
+}
+
+/* 横屏模式优化 */
+@media (max-height: 500px) and (orientation: landscape) {
+    .hud-top {
+        top: 5px;
+    }
+
+    .hud-resources {
+        top: 45px;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .resource {
+        padding: 4px 8px;
+    }
+
+    .hud-crystal {
+        top: 45px;
+    }
+
+    #tower-panel {
+        bottom: 5px;
+    }
+
+    .tower-card {
+        padding: 6px 8px;
+    }
+
+    .hud-ultimate {
+        bottom: 60px;
+        padding: 6px 15px;
+    }
+
+    #rl-debug-panel {
+        bottom: 60px;
+        max-height: 30vh;
+    }
+
+    .pause-content {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .pause-stats {
+        flex-direction: row;
     }
 }
 
