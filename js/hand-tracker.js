@@ -176,10 +176,14 @@ class HandTracker {
             this.endPinch(handLabel);
         }
 
-        if (canTrigger && velocity.speed > 300) {
-            if (velocity.y > 400) this.triggerGesture('chop', handLabel, screenLandmarks);
-            else if (isFist && velocity.speed > 500) this.triggerGesture('punch', handLabel, screenLandmarks);
-            else if (isOpen && velocity.speed > 400) this.triggerGesture('slap', handLabel, screenLandmarks);
+        // 大幅降低阈值，提升灵敏度
+        if (canTrigger && velocity.speed > 150) {
+            // 砍树：任何快速移动都算（不限制方向）
+            if (velocity.speed > 200) this.triggerGesture('chop', handLabel, screenLandmarks);
+            // 握拳锤击
+            else if (isFist && velocity.speed > 250) this.triggerGesture('punch', handLabel, screenLandmarks);
+            // 拍击
+            else if (isOpen && velocity.speed > 200) this.triggerGesture('slap', handLabel, screenLandmarks);
         }
         return { type: isPinching ? 'pinch' : (isFist ? 'fist' : (isOpen ? 'open' : 'unknown')), velocity, palmCenter: this.getPalmCenter(screenLandmarks) };
     }

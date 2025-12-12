@@ -1,25 +1,31 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>神之手：最后的防线 | God Hand: Last Defense</title>
     <meta name="description" content="一款基于手势控制的塔防肉鸽游戏，用你的双手守护最后的水晶！">
-    
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;700&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;700&display=swap"
+        rel="stylesheet">
+
     <!-- MediaPipe Hands -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
+        crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-    
+
     <!-- Styles -->
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
     <!-- Loading Screen -->
     <div id="loading-screen">
@@ -149,10 +155,10 @@
         <!-- Camera Feed (Background) -->
         <video id="camera-video" autoplay playsinline></video>
         <canvas id="hand-canvas"></canvas>
-        
+
         <!-- Game Canvas -->
         <canvas id="game-canvas"></canvas>
-        
+
         <!-- HUD -->
         <div id="hud">
             <!-- Top Bar -->
@@ -171,7 +177,7 @@
                 </div>
                 <button class="hud-btn" id="btn-pause">⏸️</button>
             </div>
-            
+
             <!-- Resources -->
             <div class="hud-resources">
                 <div class="resource" id="res-wood">
@@ -191,7 +197,7 @@
                     <span class="res-value">0</span>
                 </div>
             </div>
-            
+
             <!-- Crystal Health -->
             <div class="hud-crystal">
                 <div class="crystal-icon">💠</div>
@@ -200,7 +206,7 @@
                 </div>
                 <span class="crystal-hp" id="crystal-hp">100/100</span>
             </div>
-            
+
             <!-- Ultimate Gauge -->
             <div class="hud-ultimate">
                 <div class="ultimate-icon">⚡</div>
@@ -210,7 +216,7 @@
                 <span class="ultimate-hint">双手合十释放</span>
             </div>
         </div>
-        
+
         <!-- Tower Selection Panel -->
         <div id="tower-panel">
             <div class="tower-card" data-tower="arrow">
@@ -244,14 +250,52 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Gesture Feedback -->
         <div id="gesture-feedback" class="hidden">
             <div class="gesture-name"></div>
         </div>
-        
+
         <!-- Damage Numbers Container -->
         <div id="damage-numbers"></div>
+
+        <!-- RL Debug Panel -->
+        <div id="rl-debug-panel">
+            <div class="rl-debug-header">
+                <span>🤖 AI 智能体状态</span>
+                <button id="rl-debug-toggle">▼</button>
+            </div>
+            <div class="rl-debug-content">
+                <div class="rl-debug-row">
+                    <span class="rl-label">当前状态:</span>
+                    <span id="rl-state" class="rl-value">-</span>
+                </div>
+                <div class="rl-debug-row">
+                    <span class="rl-label">选择动作:</span>
+                    <span id="rl-action" class="rl-value">-</span>
+                </div>
+                <div class="rl-debug-row">
+                    <span class="rl-label">探索率 ε:</span>
+                    <span id="rl-epsilon" class="rl-value">0.3</span>
+                </div>
+                <div class="rl-debug-row">
+                    <span class="rl-label">训练回合:</span>
+                    <span id="rl-episodes" class="rl-value">0</span>
+                </div>
+                <div class="rl-debug-row">
+                    <span class="rl-label">状态数量:</span>
+                    <span id="rl-states-count" class="rl-value">0</span>
+                </div>
+                <div class="rl-debug-row">
+                    <span class="rl-label">平均奖励:</span>
+                    <span id="rl-avg-reward" class="rl-value">N/A</span>
+                </div>
+                <div class="rl-debug-actions">
+                    <button id="rl-reset-btn" class="rl-btn">🗑️ 重置模型</button>
+                    <button id="rl-save-btn" class="rl-btn">💾 保存</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Card Selection Modal (Roguelike) -->
@@ -305,7 +349,6 @@
         </div>
     </div>
 
-    <!-- Scripts -->
     <script src="js/utils.js"></script>
     <script src="js/hand-tracker.js"></script>
     <script src="js/effects.js"></script>
@@ -314,7 +357,9 @@
     <script src="js/enemy-system.js"></script>
     <script src="js/combat-system.js"></script>
     <script src="js/card-system.js"></script>
+    <script src="js/rl-agent.js"></script>
     <script src="js/game-world.js"></script>
     <script src="js/main.js"></script>
 </body>
+
 </html>

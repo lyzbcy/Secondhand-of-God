@@ -33,6 +33,11 @@ class EnemySystem {
                 name: '攻城巨兽', emoji: '👹',
                 hp: 200, speed: 25, damage: 25, reward: 30,
                 size: 50, canSlap: true, needsHold: true
+            },
+            rl_boss: {
+                name: 'AI猎手', emoji: '🤖',
+                hp: 150, speed: 40, damage: 20, reward: 50,
+                size: 45, canSlap: true, isRLControlled: true
             }
         };
 
@@ -45,6 +50,9 @@ class EnemySystem {
             { enemies: [{ type: 'skeleton', count: 6 }, { type: 'hedgehog', count: 4 }] },
             { enemies: [{ type: 'ghost', count: 5 }, { type: 'ogre', count: 1 }] },
             { enemies: [{ type: 'goblin', count: 10 }, { type: 'skeleton', count: 5 }, { type: 'ogre', count: 1 }] },
+            // 第9波开始出现 RL BOSS
+            { enemies: [{ type: 'skeleton', count: 8 }, { type: 'rl_boss', count: 1 }] },
+            { enemies: [{ type: 'ghost', count: 6 }, { type: 'hedgehog', count: 4 }, { type: 'rl_boss', count: 1 }] },
         ];
     }
 
@@ -79,7 +87,7 @@ class EnemySystem {
             case 3: x = -30; y = Utils.randomInt(0, h); break;
         }
 
-        this.enemies.push({
+        const enemy = {
             id: ++this.enemyIdCounter,
             type, x, y,
             ...config,
@@ -89,8 +97,13 @@ class EnemySystem {
             slowFactor: 1,
             slowTimer: 0,
             stunTimer: 0,
-            heldBy: null
-        });
+            heldBy: null,
+            // RL 相关字段
+            rlState: null,
+            rlAction: null,
+            prevDist: null
+        };
+        this.enemies.push(enemy);
     }
 
     update(deltaTime) {
@@ -116,11 +129,16 @@ class EnemySystem {
             // 被玩家按住
             if (enemy.heldBy) return;
 
-            // 移动朝向水晶
-            const angle = Utils.angle(enemy.x, enemy.y, crystal.x, crystal.y);
-            const speed = enemy.speed * enemy.slowFactor * deltaTime;
-            enemy.x += Math.cos(angle) * speed;
-            enemy.y += Math.sin(angle) * speed;
+            // RL 控制的敌人使用智能体决策
+            if (enemy.isRLControlled && this.game.rlAgent) {
+                this.updateRLEnemy(enemy, deltaTime);
+            } else {
+                // 普通敌人：直线移动朝向水晶
+                const angle = Utils.angle(enemy.x, enemy.y, crystal.x, crystal.y);
+                const speed = enemy.speed * enemy.slowFactor * deltaTime;
+                enemy.x += Math.cos(angle) * speed;
+                enemy.y += Math.sin(angle) * speed;
+            }
 
             // 攻击水晶
             if (Utils.distance(enemy.x, enemy.y, crystal.x, crystal.y) < 50) {
@@ -179,6 +197,39 @@ class EnemySystem {
         });
     }
 
+    /**
+     * 更新 RL 控制的敌人
+     */
+    updateRLEnemy(enemy, deltaTime) {
+        const rlAgent = this.game.rlAgent;
+
+        // 获取当前状态
+        const currentState = rlAgent.encodeState(enemy, this.game);
+
+        // 如果有上一个状态，进行学习
+        if (enemy.rlState && enemy.rlAction) {
+            const reward = rlAgent.calculateReward(enemy, this.game);
+            rlAgent.learn(enemy.rlState, enemy.rlAction, reward, currentState, false);
+        }
+
+        // 选择动作
+        const action = rlAgent.chooseAction(currentState);
+
+        // 保存状态和动作供下次学习
+        enemy.rlState = currentState;
+        enemy.rlAction = action;
+
+        // 执行动作
+        const movement = rlAgent.getMovementFromAction(action, enemy, this.game);
+        const speed = enemy.speed * enemy.slowFactor * movement.speedMultiplier * deltaTime;
+        enemy.x += movement.dx * speed;
+        enemy.y += movement.dy * speed;
+
+        // 边界检测
+        enemy.x = Math.max(0, Math.min(this.game.canvas.width, enemy.x));
+        enemy.y = Math.max(0, Math.min(this.game.canvas.height, enemy.y));
+    }
+
     checkHit(x, y, radius = 10) {
         for (const enemy of this.enemies) {
             if (!enemy.alive) continue;
@@ -196,17 +247,43 @@ class EnemySystem {
         enemy.hp -= damage;
         this.game.effects.createDamageNumber(enemy.x, enemy.y - 30, damage, damage > 30);
 
+        // RL 学习：被击中惩罚
+        if (enemy.isRLControlled && this.game.rlAgent && enemy.rlState) {
+            const reward = this.game.rlAgent.calculateReward(enemy, this.game, { type: 'damaged' });
+            const newState = this.game.rlAgent.encodeState(enemy, this.game);
+            this.game.rlAgent.learn(enemy.rlState, enemy.rlAction, reward, newState, false);
+        }
+
         if (enemy.hp <= 0) {
             this.killEnemy(enemy);
         }
     }
 
     killEnemy(enemy) {
+        // RL 学习：死亡惩罚
+        if (enemy.isRLControlled && this.game.rlAgent && enemy.rlState) {
+            const reward = this.game.rlAgent.calculateReward(enemy, this.game, { type: 'killed' });
+            this.game.rlAgent.learn(enemy.rlState, enemy.rlAction, reward, enemy.rlState, true);
+            this.game.rlAgent.endEpisode(reward);
+        }
+
         enemy.alive = false;
         this.game.resources.addResource('gold', enemy.reward);
         this.game.effects.createExplosion(enemy.x, enemy.y, '#ff6b35', 15);
         this.game.addUltimateCharge(5);
         this.game.stats.enemiesKilled++;
+    }
+
+    attackCrystal(enemy) {
+        // RL 学习：攻击水晶奖励
+        if (enemy.isRLControlled && this.game.rlAgent && enemy.rlState) {
+            const reward = this.game.rlAgent.calculateReward(enemy, this.game, { type: 'attackCrystal' });
+            this.game.rlAgent.learn(enemy.rlState, enemy.rlAction, reward, enemy.rlState, true);
+            this.game.rlAgent.endEpisode(reward);
+        }
+
+        this.game.damageCrystal(enemy.damage);
+        enemy.alive = false;
     }
 
     // 手部攻击检测
@@ -256,3 +333,4 @@ class EnemySystem {
 }
 
 window.EnemySystem = EnemySystem;
+
