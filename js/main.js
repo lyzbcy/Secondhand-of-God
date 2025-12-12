@@ -160,6 +160,11 @@ class Game {
 
         Utils.storage.save('godhand_settings', settings);
         document.getElementById('settings-modal')?.classList.add('hidden');
+
+        // 如果游戏已经在运行，实时应用部分设置
+        if (this.gameWorld) {
+            this.applySettings();
+        }
     }
 
     loadSettings() {
@@ -180,8 +185,43 @@ class Game {
         this.gameWorld = new GameWorld();
         await this.gameWorld.init();
 
+        // 应用设置
+        this.applySettings();
+
         // 开始游戏
         this.gameWorld.start();
+    }
+
+    applySettings() {
+        const settings = Utils.storage.load('godhand_settings', {
+            sfxVolume: 80,
+            bgmVolume: 60,
+            gestureSensitivity: 5,
+            showHandSkeleton: true,
+            showCameraFeed: true
+        });
+
+        // 应用摄像头可见性
+        const cameraVideo = document.getElementById('camera-video');
+        if (cameraVideo) {
+            cameraVideo.style.opacity = settings.showCameraFeed ? '0.3' : '0';
+        }
+
+        // 应用手部骨骼可见性
+        const handCanvas = document.getElementById('hand-canvas');
+        if (handCanvas) {
+            handCanvas.style.opacity = settings.showHandSkeleton ? '1' : '0';
+        }
+
+        // 应用手势灵敏度 (1-10 映射到速度阈值)
+        if (this.gameWorld && this.gameWorld.handTracker) {
+            const sensitivity = parseInt(settings.gestureSensitivity) || 5;
+            // 灵敏度越高，速度阈值越低
+            const baseSpeed = 200 - (sensitivity - 5) * 15; // 范围: 140-260
+            this.gameWorld.handTracker.config.gestureCooldown = 400 - sensitivity * 30; // 范围: 100-370ms
+        }
+
+        console.log('[Settings] Applied:', settings);
     }
 
     updateLoadingStatus(text) {

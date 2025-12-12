@@ -321,7 +321,9 @@ class GameWorld {
     onPinchEnd(hand, startPos) {
         if (this.draggedTowerType) {
             const state = this.handTracker.getGestureState();
-            const endPos = state[hand + 'Hand']?.palmCenter || startPos;
+            const handState = state[hand + 'Hand'];
+            // 使用捏合位置（拇指和食指中点）而不是手掌中心
+            const endPos = handState?.pinchPosition || handState?.palmCenter || startPos;
             this.towers.placeTowerAtPinch(this.draggedTowerType, endPos.x, endPos.y);
             this.draggedTowerType = null;
             this.towers.draggedTower = null;

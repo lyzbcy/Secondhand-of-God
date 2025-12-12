@@ -182,14 +182,20 @@ class HandTracker {
             this.endPinch(handLabel);
         }
 
-        // 大幅降低阈值，提升灵敏度
-        if (canTrigger && velocity.speed > 150) {
-            // 砍树：任何快速移动都算（不限制方向）
-            if (velocity.speed > 200) this.triggerGesture('chop', handLabel, screenLandmarks);
-            // 握拳锤击
-            else if (isFist && velocity.speed > 250) this.triggerGesture('punch', handLabel, screenLandmarks);
-            // 拍击
-            else if (isOpen && velocity.speed > 200) this.triggerGesture('slap', handLabel, screenLandmarks);
+        // 手势检测 - 降低阈值提高灵敏度
+        if (canTrigger && velocity.speed > 100) {
+            // 握拳锤击 - 优先检测（挖矿/砸石头）
+            if (isFist && velocity.speed > 150) {
+                this.triggerGesture('punch', handLabel, screenLandmarks);
+            }
+            // 手刀劈砍 - 检测手掌打开但手指并拢（砍树）
+            else if (!isFist && !isPinching && velocity.speed > 120) {
+                this.triggerGesture('chop', handLabel, screenLandmarks);
+            }
+            // 拍击 - 张开手掌横扫
+            else if (isOpen && velocity.speed > 150) {
+                this.triggerGesture('slap', handLabel, screenLandmarks);
+            }
         }
         return { type: isPinching ? 'pinch' : (isFist ? 'fist' : (isOpen ? 'open' : 'unknown')), velocity, palmCenter: this.getPalmCenter(screenLandmarks) };
     }
@@ -200,7 +206,7 @@ class HandTracker {
 
     getExtendedFingers(lm) {
         return [4, 8, 12, 16, 20].map((tipIdx, i) => {
-            if (i === 0) return Utils.distance(lm[4].x, lm[4].y, lm[2].x, lm[2].y) > 0.06;
+            if (i === 0) return Utils.distance(lm[4].x, lm[4].y, lm[2].x, lm[2].y) > 0.05; // 降低拇指阈值
             return lm[tipIdx].y < lm[[3, 6, 10, 14, 18][i]].y;
         });
     }
@@ -235,13 +241,33 @@ class HandTracker {
     }
 
     on(event, callback) { this.callbacks[event] = callback; }
+
+    getPinchPosition(landmarks) {
+        // 拇指尖(4)和食指尖(8)的中点
+        return {
+            x: (landmarks[4].x + landmarks[8].x) / 2,
+            y: (landmarks[4].y + landmarks[8].y) / 2
+        };
+    }
+
     getGestureState() {
         return {
-            leftHand: this.leftHand ? { gesture: this.gestures.left, palmCenter: this.getPalmCenter(this.leftHand.landmarks), isPinching: this.pinchState.left.active } : null,
-            rightHand: this.rightHand ? { gesture: this.gestures.right, palmCenter: this.getPalmCenter(this.rightHand.landmarks), isPinching: this.pinchState.right.active } : null,
+            leftHand: this.leftHand ? {
+                gesture: this.gestures.left,
+                palmCenter: this.getPalmCenter(this.leftHand.landmarks),
+                pinchPosition: this.getPinchPosition(this.leftHand.landmarks),
+                isPinching: this.pinchState.left.active
+            } : null,
+            rightHand: this.rightHand ? {
+                gesture: this.gestures.right,
+                palmCenter: this.getPalmCenter(this.rightHand.landmarks),
+                pinchPosition: this.getPinchPosition(this.rightHand.landmarks),
+                isPinching: this.pinchState.right.active
+            } : null,
             handsCount: this.handsData.length
         };
     }
 }
 
 window.HandTracker = HandTracker;
+

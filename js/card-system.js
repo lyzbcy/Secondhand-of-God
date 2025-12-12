@@ -45,12 +45,30 @@ class CardSystem {
 
         container.innerHTML = '';
 
+        // 如果没有可选的卡，显示跳过选项
+        if (cards.length === 0) {
+            const skipEl = document.createElement('div');
+            skipEl.className = 'upgrade-card skip-card';
+            skipEl.innerHTML = `
+                <div class="card-icon">⏭️</div>
+                <div class="card-title">暂无新卡</div>
+                <div class="card-desc">你已收集所有神格！点击继续游戏</div>
+                <div class="card-rarity">继续</div>
+            `;
+            skipEl.addEventListener('click', () => this.skipCardSelection());
+            container.appendChild(skipEl);
+            modal.classList.remove('hidden');
+            return;
+        }
+
         cards.forEach(card => {
             const cardEl = document.createElement('div');
             cardEl.className = `upgrade-card rarity-${card.rarity}`;
+            const stackCount = this.getCardStackCount(card.id);
+            const stackLabel = stackCount > 0 ? ` (x${stackCount + 1})` : '';
             cardEl.innerHTML = `
                 <div class="card-icon">${card.icon}</div>
-                <div class="card-title">${card.name}</div>
+                <div class="card-title">${card.name}${stackLabel}</div>
                 <div class="card-desc">${card.desc}</div>
                 <div class="card-rarity">${this.getRarityName(card.rarity)}</div>
             `;
@@ -61,6 +79,15 @@ class CardSystem {
         modal.classList.remove('hidden');
     }
 
+    skipCardSelection() {
+        document.getElementById('card-modal')?.classList.add('hidden');
+        this.game.resumeAfterCard();
+    }
+
+    getCardStackCount(cardId) {
+        return this.activeCards.filter(c => c.id === cardId).length;
+    }
+
     getRandomCards(count) {
         const allCards = [
             ...this.cardPool.fury,
@@ -68,13 +95,21 @@ class CardSystem {
             ...this.cardPool.tycoon
         ];
 
-        // 过滤已获得的卡
-        const available = allCards.filter(c => !this.activeCards.find(ac => ac.id === c.id));
+        // 优先选择未获得的卡，但如果都获得了就允许重复选择
+        let available = allCards.filter(c => !this.activeCards.find(ac => ac.id === c.id));
+
+        // 如果没有新卡可选，允许重复选择已有卡（可叠加效果）
+        if (available.length === 0) {
+            available = allCards; // 所有卡都可以再次选择
+        }
 
         // 根据稀有度加权随机
         const weighted = [];
         available.forEach(card => {
-            const weight = { common: 10, rare: 5, epic: 2, legendary: 1 }[card.rarity] || 1;
+            let weight = { common: 10, rare: 5, epic: 2, legendary: 1 }[card.rarity] || 1;
+            // 已拥有的卡权重降低
+            const stackCount = this.getCardStackCount(card.id);
+            weight = Math.max(1, Math.floor(weight / (stackCount + 1)));
             for (let i = 0; i < weight; i++) weighted.push(card);
         });
 
