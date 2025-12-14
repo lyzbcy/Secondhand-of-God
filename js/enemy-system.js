@@ -87,6 +87,12 @@ class EnemySystem {
             case 3: x = -30; y = Utils.randomInt(0, h); break;
         }
 
+        // 双人模式：随机选择目标基地（50/50）
+        let targetCrystalIndex = 0;
+        if (this.game.gameMode === 'coop') {
+            targetCrystalIndex = Math.random() < 0.5 ? 0 : 1;
+        }
+
         const enemy = {
             id: ++this.enemyIdCounter,
             type, x, y,
@@ -98,6 +104,7 @@ class EnemySystem {
             slowTimer: 0,
             stunTimer: 0,
             heldBy: null,
+            targetCrystalIndex,  // 目标基地索引
             // RL 相关字段
             rlState: null,
             rlAction: null,
@@ -107,8 +114,14 @@ class EnemySystem {
     }
 
     update(deltaTime) {
-        const crystal = this.game.crystal;
-        if (!crystal) return;
+        // 获取目标水晶
+        let crystal;
+        if (this.game.gameMode === 'coop') {
+            crystal = null; // 将在每个敌人循环中单独获取
+        } else {
+            crystal = this.game.crystal;
+            if (!crystal) return;
+        }
 
         this.enemies.forEach(enemy => {
             if (!enemy.alive) return;
@@ -129,19 +142,29 @@ class EnemySystem {
             // 被玩家按住
             if (enemy.heldBy) return;
 
+            // 获取当前敌人的目标水晶
+            let targetCrystal;
+            if (this.game.gameMode === 'coop') {
+                targetCrystal = this.game.crystals[enemy.targetCrystalIndex];
+            } else {
+                targetCrystal = crystal;
+            }
+
+            if (!targetCrystal) return;
+
             // RL 控制的敌人使用智能体决策
             if (enemy.isRLControlled && this.game.rlAgent) {
                 this.updateRLEnemy(enemy, deltaTime);
             } else {
-                // 普通敌人：直线移动朝向水晶
-                const angle = Utils.angle(enemy.x, enemy.y, crystal.x, crystal.y);
+                // 普通敌人：直线移动朝向目标水晶
+                const angle = Utils.angle(enemy.x, enemy.y, targetCrystal.x, targetCrystal.y);
                 const speed = enemy.speed * enemy.slowFactor * deltaTime;
                 enemy.x += Math.cos(angle) * speed;
                 enemy.y += Math.sin(angle) * speed;
             }
 
             // 攻击水晶
-            if (Utils.distance(enemy.x, enemy.y, crystal.x, crystal.y) < 50) {
+            if (Utils.distance(enemy.x, enemy.y, targetCrystal.x, targetCrystal.y) < 50) {
                 this.attackCrystal(enemy);
             }
         });
@@ -161,39 +184,24 @@ class EnemySystem {
 
             const config = this.enemyTypes[enemy.type];
 
-            // 阴影
-            ctx.fillStyle = 'rgba(0,0,0,0.3)';
-            ctx.beginPath();
-            ctx.ellipse(enemy.x, enemy.y + enemy.size * 0.3, enemy.size * 0.6, enemy.size * 0.2, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 绘制敌人
-            let alpha = 1;
-            if (enemy.ethereal) {
-                alpha = 0.6 + Math.sin(Date.now() / 200) * 0.2;
-            }
-
-            ctx.globalAlpha = alpha;
-            ctx.font = `${enemy.size * 1.5}px Arial`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(config.emoji, enemy.x, enemy.y);
-            ctx.globalAlpha = 1;
-
-            // 减速视觉
-            if (enemy.slowTimer > 0) {
-                ctx.fillStyle = 'rgba(0, 212, 255, 0.3)';
+            // 使用等距渲染器绘制敌人
+            if (this.game?.isoRenderer) {
+                this.game.isoRenderer.renderEnemy(ctx, enemy, config);
+            } else {
+                // 备用渲染
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
                 ctx.beginPath();
-                ctx.arc(enemy.x, enemy.y, enemy.size * 0.8, 0, Math.PI * 2);
+                ctx.ellipse(enemy.x, enemy.y + enemy.size * 0.3, enemy.size * 0.6, enemy.size * 0.2, 0, 0, Math.PI * 2);
                 ctx.fill();
-            }
 
-            // 血条
-            const barW = enemy.size * 1.5, barH = 5;
-            ctx.fillStyle = 'rgba(0,0,0,0.5)';
-            ctx.fillRect(enemy.x - barW / 2, enemy.y - enemy.size - 10, barW, barH);
-            ctx.fillStyle = enemy.hp > enemy.maxHp * 0.3 ? '#2ecc71' : '#e74c3c';
-            ctx.fillRect(enemy.x - barW / 2, enemy.y - enemy.size - 10, barW * (enemy.hp / enemy.maxHp), barH);
+                let alpha = enemy.ethereal ? 0.6 + Math.sin(Date.now() / 200) * 0.2 : 1;
+                ctx.globalAlpha = alpha;
+                ctx.font = `${enemy.size * 1.5}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(config.emoji, enemy.x, enemy.y);
+                ctx.globalAlpha = 1;
+            }
         });
     }
 
@@ -282,7 +290,7 @@ class EnemySystem {
             this.game.rlAgent.endEpisode(reward);
         }
 
-        this.game.damageCrystal(enemy.damage);
+        this.game.damageCrystal(enemy.damage, enemy.targetCrystalIndex || 0);
         enemy.alive = false;
     }
 

@@ -10,7 +10,7 @@ class SkillTreeSystem {
         this.unlockedSkills = new Set();
         this.skillPoints = 0;
 
-        // 三个技能树
+        // 三个技能树 - 扩展版，更多技能选择
         this.skillTrees = {
             fury: {
                 name: '狂暴之路',
@@ -18,20 +18,23 @@ class SkillTreeSystem {
                 color: '#ff4757',
                 description: '强化手部攻击力',
                 tiers: [
-                    // Tier 1 - 基础技能
+                    // Tier 1 - 基础技能 (3个可选)
                     [
                         { id: 'iron_palm', name: '铁砂掌', icon: '🖐️', desc: '手掌攻击范围+30%', effect: { handRange: 1.3 } },
-                        { id: 'power_punch', name: '力量拳', icon: '👊', desc: '握拳伤害+50%', effect: { punchDamage: 1.5 } }
+                        { id: 'power_punch', name: '力量拳', icon: '👊', desc: '握拳伤害+50%', effect: { punchDamage: 1.5 } },
+                        { id: 'swift_strike', name: '迅捷打击', icon: '💨', desc: '攻击速度+20%', effect: { attackSpeed: 1.2 } }
                     ],
-                    // Tier 2 - 进阶技能（需要Tier1中的1个）
+                    // Tier 2 - 进阶技能 (3个可选)
                     [
                         { id: 'thunder_fist', name: '雷神之锤', icon: '⚡', desc: '握拳附带闪电伤害', effect: { punchLightning: true } },
-                        { id: 'combo_master', name: '连击大师', icon: '💫', desc: '连续攻击伤害递增', effect: { comboDamage: true } }
+                        { id: 'combo_master', name: '连击大师', icon: '💫', desc: '连续攻击伤害递增', effect: { comboDamage: true } },
+                        { id: 'critical_hit', name: '致命一击', icon: '💥', desc: '20%暴击率，双倍伤害', effect: { critChance: 0.2 } }
                     ],
-                    // Tier 3 - 高级技能（需要Tier2中的1个）
+                    // Tier 3 - 高级技能 (3个可选)
                     [
                         { id: 'gold_touch', name: '点石成金', icon: '💰', desc: '击杀获得双倍金币', effect: { goldMulti: 2 } },
-                        { id: 'berserker', name: '狂暴之心', icon: '🔥', desc: '攻速x2，但受伤x1.5', effect: { attackSpeedMulti: 2, damageTakenMulti: 1.5 } }
+                        { id: 'berserker', name: '狂暴之心', icon: '🔥', desc: '血量低于50%时攻击x2', effect: { berserkerMode: true } },
+                        { id: 'life_steal', name: '生命汲取', icon: '❤️‍🔥', desc: '攻击回复生命', effect: { lifeSteal: 0.1 } }
                     ]
                 ],
                 ultimate: {
@@ -49,16 +52,19 @@ class SkillTreeSystem {
                 description: '强化防御塔',
                 tiers: [
                     [
-                        { id: 'overcharge', name: '超频充能', icon: '🔋', desc: '触碰塔时攻速x2持续3秒', effect: { towerBoost: true } },
-                        { id: 'range_up', name: '远程瞄准', icon: '🎯', desc: '所有塔射程+25%', effect: { towerRange: 1.25 } }
+                        { id: 'overcharge', name: '超频充能', icon: '🔋', desc: '触碰塔时攻速x2', effect: { towerBoost: true } },
+                        { id: 'range_up', name: '远程瞄准', icon: '🎯', desc: '所有塔射程+25%', effect: { towerRange: 1.25 } },
+                        { id: 'cheap_towers', name: '节约建造', icon: '🏗️', desc: '建塔成本-20%', effect: { towerCostReduction: 0.2 } }
                     ],
                     [
-                        { id: 'resonance', name: '共鸣水晶', icon: '💠', desc: '水晶可发射激光协助攻击', effect: { crystalAttack: true } },
-                        { id: 'repair_aura', name: '修复光环', icon: '💚', desc: '塔自动缓慢回血', effect: { towerRegen: true } }
+                        { id: 'resonance', name: '共鸣水晶', icon: '💠', desc: '水晶可发射激光', effect: { crystalAttack: true } },
+                        { id: 'repair_aura', name: '修复光环', icon: '💚', desc: '塔自动缓慢回血', effect: { towerRegen: true } },
+                        { id: 'chain_attack', name: '连锁攻击', icon: '⛓️', desc: '塔攻击可连锁跳跃', effect: { chainAttack: true } }
                     ],
                     [
-                        { id: 'thorns', name: '荆棘护盾', icon: '🛡️', desc: '反弹50%伤害给攻击者', effect: { thornsDamage: 0.5 } },
-                        { id: 'tower_master', name: '塔防大师', icon: '👑', desc: '所有塔攻击力+50%', effect: { towerDamageMulti: 1.5 } }
+                        { id: 'thorns', name: '荆棘护盾', icon: '🛡️', desc: '反弹50%伤害', effect: { thornsDamage: 0.5 } },
+                        { id: 'tower_master', name: '塔防大师', icon: '👑', desc: '所有塔攻击力+50%', effect: { towerDamageMulti: 1.5 } },
+                        { id: 'double_shot', name: '双重射击', icon: '🎯', desc: '塔有30%几率双发', effect: { doubleShot: 0.3 } }
                     ]
                 ],
                 ultimate: {
@@ -77,22 +83,25 @@ class SkillTreeSystem {
                 tiers: [
                     [
                         { id: 'lumberjack', name: '伐木机', icon: '🪓', desc: '砍树效率x2', effect: { chopMulti: 2 } },
-                        { id: 'miner', name: '矿工精神', icon: '⛏️', desc: '挖矿效率x2', effect: { mineMulti: 2 } }
+                        { id: 'miner', name: '矿工精神', icon: '⛏️', desc: '挖矿效率x2', effect: { mineMulti: 2 } },
+                        { id: 'quick_hands', name: '巧手', icon: '🤲', desc: '收集速度+50%', effect: { collectSpeed: 1.5 } }
                     ],
                     [
                         { id: 'airdrop', name: '空投补给', icon: '📦', desc: '每波开始获得随机资源', effect: { waveBonus: true } },
-                        { id: 'lucky_drop', name: '幸运掉落', icon: '🍀', desc: '敌人有几率掉落水晶', effect: { crystalDrop: 0.1 } }
+                        { id: 'lucky_drop', name: '幸运掉落', icon: '🍀', desc: '敌人有10%几率掉水晶', effect: { crystalDrop: 0.1 } },
+                        { id: 'resource_magnet', name: '资源磁铁', icon: '🧲', desc: '资源自动飞向你', effect: { resourceMagnet: true } }
                     ],
                     [
                         { id: 'auto_turret', name: '临时炮台', icon: '🤖', desc: '消耗100木材召唤炮台', effect: { autoTurret: true } },
-                        { id: 'treasure_sense', name: '财富感知', icon: '✨', desc: '金币获取+100%', effect: { goldMulti: 2 } }
+                        { id: 'treasure_sense', name: '财富感知', icon: '✨', desc: '金币获取+100%', effect: { goldMulti: 2 } },
+                        { id: 'passive_income', name: '被动收入', icon: '💸', desc: '每5秒自动获得10金', effect: { passiveGold: 10 } }
                     ]
                 ],
                 ultimate: {
                     id: 'gold_rain',
                     name: '黄金雨',
                     icon: '🌧️',
-                    desc: '天降500金币，同时短暂眩晕所有敌人',
+                    desc: '天降500金币，同时眩晕所有敌人',
                     effect: { goldRain: 500, stunAll: 2 }
                 }
             }
@@ -368,19 +377,23 @@ class SkillTreeSystem {
     }
 
     saveState() {
-        localStorage.setItem('godhand_skills', JSON.stringify([...this.unlockedSkills]));
+        // 不再保存到localStorage - 技能每局游戏重置
+        // 如果需要持久化可以改用sessionStorage或其他方式
     }
 
     loadState() {
-        try {
-            const saved = localStorage.getItem('godhand_skills');
-            if (saved) {
-                const skills = JSON.parse(saved);
-                this.unlockedSkills = new Set(skills);
-            }
-        } catch (e) {
-            console.error('[SkillTree] Failed to load state:', e);
-        }
+        // 每局新游戏技能都从零开始
+        this.unlockedSkills = new Set();
+        // 清除旧的保存数据
+        localStorage.removeItem('godhand_skills');
+    }
+
+    // 重置技能树（用于新游戏）
+    reset() {
+        this.unlockedSkills = new Set();
+        this.skillPoints = 0;
+        localStorage.removeItem('godhand_skills');
+        console.log('[SkillTree] Reset all skills');
     }
 
     hasSkill(skillId) {

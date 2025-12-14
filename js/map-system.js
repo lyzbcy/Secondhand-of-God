@@ -115,12 +115,17 @@ class MapSystem {
         const panel = document.getElementById('region-craftsman');
         if (!panel) return;
 
+        // 完全不透明背景，不让基地显示through
+        panel.style.background = '#2d1f3d';
+        panel.style.opacity = '1';
+        panel.style.backgroundColor = '#2d1f3d';
+
         const craftsman = this.game?.craftsman;
         const unlocked = craftsman?.unlocked || false;
         const towers = this.game?.towers?.towers || [];
 
         panel.innerHTML = `
-            <div class="region-content craftsman-zone">
+            <div class="region-content craftsman-zone" style="background: transparent; width: 100%; height: 100vh; overflow-y: auto;">
                 <div class="zone-header">
                     <span class="zone-icon">🛠️</span>
                     <div class="zone-title"><h2>工匠坊</h2><p>消耗金币升级塔防</p></div>
@@ -199,6 +204,11 @@ class MapSystem {
         const panel = document.getElementById('region-factory');
         if (!panel) return;
 
+        // 完全不透明背景，不让基地显示through
+        panel.style.background = '#3d2f1f';
+        panel.style.opacity = '1';
+        panel.style.backgroundColor = '#3d2f1f';
+
         const factory = this.game?.factory;
         if (!factory) {
             panel.innerHTML = `<div class="region-content factory-zone"><p>加载中...</p></div>`;
@@ -215,7 +225,7 @@ class MapSystem {
             .join(' ') || '暂无';
 
         panel.innerHTML = `
-            <div class="region-content factory-zone shelter-style">
+            <div class="region-content factory-zone shelter-style" style="background: transparent; width: 100%; height: 100vh; overflow-y: auto;">
                 <div class="zone-header">
                     <span class="zone-icon">🏭</span>
                     <div class="zone-title"><h2>资源工厂</h2><p>自动产出各类资源</p></div>

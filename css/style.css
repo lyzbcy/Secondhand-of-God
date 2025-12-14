@@ -150,46 +150,124 @@ body {
 #start-menu {
     position: fixed;
     inset: 0;
-    background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0a1a2a 100%);
+    background: radial-gradient(ellipse at center, #1a1a3a 0%, #0a0a1a 70%, #050510 100%);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 100;
+    overflow: hidden;
+}
+
+/* 粒子背景画布 */
+#menu-particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* 装饰性光晕 */
+#start-menu::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background:
+        radial-gradient(circle at 30% 20%, rgba(255, 179, 217, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 70% 80%, rgba(255, 245, 157, 0.1) 0%, transparent 40%);
+    animation: auroraMove 20s ease-in-out infinite;
+    z-index: 0;
+}
+
+@keyframes auroraMove {
+
+    0%,
+    100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+
+    50% {
+        transform: translate(-5%, 5%) rotate(3deg);
+    }
 }
 
 .menu-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 40px;
+    gap: 30px;
+    z-index: 10;
+    position: relative;
+    margin-top: 60px;
+    /* 防止标题被顶部遮挡 */
 }
 
 .title-section {
     text-align: center;
+    animation: floatIn 1s ease-out;
+}
+
+@keyframes floatIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .game-title {
     font-family: var(--font-display);
     font-size: 5rem;
     font-weight: 900;
-    background: linear-gradient(180deg, #fff 0%, var(--primary) 50%, var(--primary-dark) 100%);
+    background: linear-gradient(180deg, #fff 0%, var(--primary) 40%, var(--accent) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    text-shadow: 0 0 60px rgba(0, 212, 255, 0.5);
     letter-spacing: 10px;
-    animation: titleGlow 3s ease-in-out infinite;
+    animation: titleGlow 3s ease-in-out infinite, titleFloat 6s ease-in-out infinite;
+    position: relative;
+}
+
+.game-title::after {
+    content: '神之手';
+    position: absolute;
+    left: 0;
+    top: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, transparent 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: blur(20px);
+    opacity: 0.6;
+    z-index: -1;
 }
 
 @keyframes titleGlow {
 
     0%,
     100% {
-        filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.5));
+        filter: drop-shadow(0 0 30px rgba(255, 179, 217, 0.6));
     }
 
     50% {
-        filter: drop-shadow(0 0 40px rgba(0, 212, 255, 0.8));
+        filter: drop-shadow(0 0 60px rgba(255, 245, 157, 0.8));
+    }
+}
+
+@keyframes titleFloat {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-8px);
     }
 }
 
@@ -197,15 +275,44 @@ body {
     font-family: var(--font-display);
     font-size: 1.5rem;
     color: var(--accent);
-    letter-spacing: 8px;
-    margin-top: 10px;
+    letter-spacing: 12px;
+    margin-top: 15px;
     text-transform: uppercase;
+    opacity: 0.9;
+    animation: subtitlePulse 4s ease-in-out infinite;
+}
+
+@keyframes subtitlePulse {
+
+    0%,
+    100% {
+        opacity: 0.7;
+        letter-spacing: 12px;
+    }
+
+    50% {
+        opacity: 1;
+        letter-spacing: 14px;
+    }
 }
 
 .menu-buttons {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
+    animation: buttonsSlide 0.8s ease-out 0.3s both;
+}
+
+@keyframes buttonsSlide {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .menu-btn {
@@ -213,37 +320,73 @@ body {
     align-items: center;
     justify-content: center;
     gap: 12px;
-    padding: 18px 50px;
+    padding: 16px 45px;
     font-family: var(--font-display);
-    font-size: 1.1rem;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    background: var(--bg-glass);
-    backdrop-filter: blur(10px);
+    font-size: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 50px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(15px);
     color: var(--text-primary);
     cursor: pointer;
-    transition: all var(--transition-normal);
-    min-width: 280px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 260px;
+    position: relative;
+    overflow: hidden;
+}
+
+.menu-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
+    transform: translateX(-100%);
+    transition: transform 0.6s;
+}
+
+.menu-btn:hover::before {
+    transform: translateX(100%);
 }
 
 .menu-btn:hover {
-    transform: translateY(-3px);
+    transform: translateY(-4px) scale(1.02);
     border-color: var(--primary);
-    box-shadow: var(--shadow-glow);
+    box-shadow: 0 10px 40px rgba(255, 179, 217, 0.3), 0 0 20px rgba(255, 179, 217, 0.2);
 }
 
 .menu-btn.primary {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-    border-color: var(--primary);
+    background: linear-gradient(135deg, var(--primary) 0%, #ff69b4 50%, var(--accent) 100%);
+    background-size: 200% 200%;
+    border: none;
+    color: #1a1a2e;
+    font-weight: 700;
+    animation: gradientShift 5s ease infinite;
+}
+
+@keyframes gradientShift {
+
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
 }
 
 .menu-btn.primary:hover {
-    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-    box-shadow: 0 0 40px rgba(0, 212, 255, 0.6);
+    box-shadow: 0 10px 50px rgba(255, 179, 217, 0.5), 0 0 30px rgba(255, 245, 157, 0.3);
+    transform: translateY(-5px) scale(1.05);
 }
 
 .btn-icon {
-    font-size: 1.3rem;
+    font-size: 1.4rem;
+    transition: transform 0.3s;
+}
+
+.menu-btn:hover .btn-icon {
+    transform: scale(1.2) rotate(-5deg);
 }
 
 .camera-preview {
@@ -2405,17 +2548,41 @@ body {
 }
 
 #region-craftsman {
-    background: linear-gradient(135deg, #2d1f3d 0%, #4a3f5c 100%);
+    background-color: #2d1f3d !important;
+    background-image: none !important;
+    opacity: 1 !important;
+    position: relative;
+    z-index: 10;
+}
+
+#region-craftsman::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: #2d1f3d;
+    z-index: -1;
 }
 
 #region-base {
-    background: transparent;
+    background: transparent !important;
     /* 基地透明，显示游戏画面 */
     pointer-events: none;
 }
 
 #region-factory {
-    background: linear-gradient(135deg, #3d2f1f 0%, #5c4f3a 100%);
+    background-color: #3d2f1f !important;
+    background-image: none !important;
+    opacity: 1 !important;
+    position: relative;
+    z-index: 10;
+}
+
+#region-factory::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: #3d2f1f;
+    z-index: -1;
 }
 
 /* 导航栏 */
@@ -2477,6 +2644,17 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
     overflow-y: auto;
+}
+
+/* 工匠坊和工厂的内容区域必须不透明 */
+#region-craftsman .region-content,
+#region-factory .region-content {
+    background: transparent !important;
+    box-shadow: none;
+    border: none;
+    max-width: 100%;
+    width: 100%;
+    padding: 20px;
 }
 
 .zone-header {
@@ -2725,6 +2903,9 @@ body {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    width: 100%;
+    padding: 10px 0;
+    min-height: 200px;
 }
 
 .shelter-floor {
@@ -2736,6 +2917,9 @@ body {
     border-radius: 12px;
     border-left: 4px solid transparent;
     transition: all 0.2s;
+    width: 100%;
+    min-height: 60px;
+    box-sizing: border-box;
 }
 
 .shelter-floor.unlocked {
@@ -3012,59 +3196,125 @@ body {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    position: relative;
+}
+
+/* 技能树连接线 */
+.tree-tiers::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 20px;
+    bottom: 20px;
+    width: 2px;
+    background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    z-index: 0;
 }
 
 .skill-tier {
     display: flex;
     gap: 6px;
     justify-content: center;
+    position: relative;
+    z-index: 1;
 }
 
 .skill-node {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 6px 8px;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 8px;
-    border: 2px solid transparent;
+    padding: 8px 10px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    min-width: 60px;
-    width: 60px;
+    min-width: 65px;
+    width: 65px;
+}
+
+.skill-node::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 12px;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: -1;
+}
+
+.skill-node:hover::before {
+    opacity: 1;
 }
 
 .skill-node.locked {
-    opacity: 0.4;
+    opacity: 0.35;
     cursor: not-allowed;
+    filter: grayscale(50%);
 }
 
 .skill-node.available {
     border-color: var(--tree-color);
+    animation: nodeAvailable 2s ease-in-out infinite;
+}
+
+@keyframes nodeAvailable {
+
+    0%,
+    100% {
+        box-shadow: 0 0 10px rgba(var(--tree-color-rgb, 255, 179, 217), 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(var(--tree-color-rgb, 255, 179, 217), 0.6);
+    }
 }
 
 .skill-node.available:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+    transform: scale(1.1) translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .skill-node.unlocked {
-    background: rgba(46, 204, 113, 0.2);
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.25) 0%, rgba(39, 174, 96, 0.15) 100%);
     border-color: var(--success);
+    box-shadow: 0 0 15px rgba(46, 204, 113, 0.3);
+}
+
+.skill-node.unlocked .skill-icon {
+    animation: iconBounce 0.5s ease;
+}
+
+@keyframes iconBounce {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.3);
+    }
 }
 
 .skill-node .skill-icon {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
+    transition: transform 0.2s;
+}
+
+.skill-node:hover .skill-icon {
+    transform: scale(1.15);
 }
 
 .skill-node .skill-name {
     font-size: 0.6rem;
     text-align: center;
     color: var(--text-secondary);
-    margin-top: 3px;
+    margin-top: 4px;
     line-height: 1.2;
-    max-width: 55px;
+    max-width: 58px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -3205,4 +3455,184 @@ body {
 
 .skill-tree-footer .menu-btn {
     padding: 10px 30px;
+}
+
+/* ===================================
+   Developer Menu
+   =================================== */
+.dev-menu {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    max-height: 80vh;
+    background: rgba(20, 20, 40, 0.98);
+    border: 2px solid var(--accent);
+    border-radius: 16px;
+    z-index: 9999;
+    overflow-y: auto;
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.3);
+}
+
+.dev-menu.hidden {
+    display: none;
+}
+
+.dev-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), transparent);
+    border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.dev-header h3 {
+    margin: 0;
+    color: var(--accent);
+    font-family: var(--font-display);
+}
+
+.dev-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.dev-close:hover {
+    color: var(--danger);
+    transform: scale(1.2);
+}
+
+.dev-section {
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dev-section h4 {
+    margin: 0 0 10px 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.dev-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.dev-btn {
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.dev-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: var(--primary);
+}
+
+.dev-btn.danger {
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.dev-btn.danger:hover {
+    background: rgba(231, 76, 60, 0.2);
+}
+
+.dev-btn.small {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+}
+
+.dev-btn.full {
+    width: 100%;
+    margin-top: 10px;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    border: none;
+    color: #000;
+    font-weight: bold;
+}
+
+.dev-resource-row,
+.dev-wave-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.dev-resource-row span,
+.dev-wave-row span,
+.dev-wave-row label {
+    min-width: 70px;
+    font-size: 0.85rem;
+}
+
+.dev-resource-row input,
+.dev-wave-row input {
+    flex: 1;
+    padding: 6px 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    max-width: 100px;
+}
+
+.dev-footer {
+    padding: 10px 20px;
+    text-align: center;
+}
+
+.dev-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.dev-toast {
+    position: fixed;
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 15px 30px;
+    background: rgba(46, 204, 113, 0.9);
+    color: #fff;
+    border-radius: 10px;
+    font-weight: bold;
+    z-index: 99999;
+    animation: toastIn 0.3s ease, toastOut 0.3s ease 1.7s forwards;
+}
+
+@keyframes toastIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@keyframes toastOut {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
 }

@@ -4,17 +4,23 @@
  */
 
 class HandTracker {
-    constructor() {
+    constructor(gameMode = 'single') {
+        this.gameMode = gameMode; // 'single' or 'coop'
         this.hands = null;
         this.camera = null;
         this.isInitialized = false;
         this.isTracking = false;
 
+        // 单人模式：左右手
+        // 双人模式：玩家1左右手 + 玩家2左右手
         this.leftHand = null;
         this.rightHand = null;
+        this.player1 = { leftHand: null, rightHand: null };
+        this.player2 = { leftHand: null, rightHand: null };
+
         this.handsData = [];
         this.gestures = { left: null, right: null };
-        this.history = { left: [], right: [] };
+        this.history = { left: [], right: [], p1left: [], p1right: [], p2left: [], p2right: [] };
         this.historyMaxLength = 10;
 
         this.config = {
@@ -23,11 +29,23 @@ class HandTracker {
             gestureCooldown: 300
         };
 
-        this.lastGestureTime = { left: 0, right: 0, both: 0 };
+        this.lastGestureTime = { left: 0, right: 0, both: 0, p1left: 0, p1right: 0, p2left: 0, p2right: 0 };
         this.callbacks = {};
         this.pinchState = {
             left: { active: false, startPos: null },
-            right: { active: false, startPos: null }
+            right: { active: false, startPos: null },
+            p1left: { active: false, startPos: null },
+            p1right: { active: false, startPos: null },
+            p2left: { active: false, startPos: null },
+            p2right: { active: false, startPos: null }
+        };
+
+        // 玩家颜色方案
+        this.colors = {
+            p1left: '#00d4ff',   // 玩家1左手：青色
+            p1right: '#ff6b35',  // 玩家1右手：橙色
+            p2left: '#00ff88',   // 玩家2左手：绿色
+            p2right: '#ff3366'   // 玩家2右手：粉红色
         };
     }
 
@@ -40,12 +58,17 @@ class HandTracker {
             this.hands = new Hands({
                 locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
             });
+
+            const maxHands = this.gameMode === 'coop' ? 4 : 2;
             this.hands.setOptions({
-                maxNumHands: 2, modelComplexity: 1,
-                minDetectionConfidence: 0.7, minTrackingConfidence: 0.5
+                maxNumHands: maxHands,
+                modelComplexity: 1,
+                minDetectionConfidence: 0.7,
+                minTrackingConfidence: 0.5
             });
             this.hands.onResults((results) => this.onResults(results));
             this.isInitialized = true;
+            console.log(`[HandTracker] Initialized in ${this.gameMode} mode, max hands: ${maxHands}`);
             return true;
         } catch (error) {
             console.error('HandTracker init failed:', error);
@@ -103,26 +126,84 @@ class HandTracker {
 
         const hadHands = this.handsData.length > 0;
         this.handsData = [];
-        this.leftHand = null;
-        this.rightHand = null;
+
+        // 重置手部数据
+        if (this.gameMode === 'single') {
+            this.leftHand = null;
+            this.rightHand = null;
+        } else {
+            this.player1.leftHand = null;
+            this.player1.rightHand = null;
+            this.player2.leftHand = null;
+            this.player2.rightHand = null;
+        }
 
         if (results.multiHandLandmarks && results.multiHandedness) {
             for (let i = 0; i < results.multiHandLandmarks.length; i++) {
                 const landmarks = results.multiHandLandmarks[i];
                 const handedness = results.multiHandedness[i];
                 const screenLandmarks = this.convertToScreenCoords(landmarks);
-                const handData = { landmarks: screenLandmarks, normalizedLandmarks: landmarks, handedness: handedness.label };
-                this.handsData.push(handData);
 
-                if (handedness.label === 'Left') {
-                    this.rightHand = handData;
-                    this.updateHistory('right', screenLandmarks);
+                // 计算手掌中心用于玩家识别
+                const palmCenter = this.getPalmCenter(screenLandmarks);
+                const normalizedX = landmarks[9].x; // 使用手掌根部的归一化X坐标
+
+                const handData = {
+                    landmarks: screenLandmarks,
+                    normalizedLandmarks: landmarks,
+                    handedness: handedness.label,
+                    palmCenter
+                };
+
+                if (this.gameMode === 'coop') {
+                    // 双人模式：根据X坐标区分玩家
+                    const playerId = normalizedX < 0.5 ? 1 : 2;
+                    handData.playerId = playerId;
+
+                    // MediaPipe的handedness是镜像的
+                    const isLeft = handedness.label === 'Left';
+                    const actualHand = isLeft ? 'right' : 'left'; // 镜像转换
+                    handData.actualHand = actualHand;
+
+                    // 分配到对应玩家
+                    if (playerId === 1) {
+                        if (actualHand === 'left') {
+                            this.player1.leftHand = handData;
+                            this.updateHistory('p1left', screenLandmarks);
+                            handData.handKey = 'p1left';
+                        } else {
+                            this.player1.rightHand = handData;
+                            this.updateHistory('p1right', screenLandmarks);
+                            handData.handKey = 'p1right';
+                        }
+                    } else {
+                        if (actualHand === 'left') {
+                            this.player2.leftHand = handData;
+                            this.updateHistory('p2left', screenLandmarks);
+                            handData.handKey = 'p2left';
+                        } else {
+                            this.player2.rightHand = handData;
+                            this.updateHistory('p2right', screenLandmarks);
+                            handData.handKey = 'p2right';
+                        }
+                    }
                 } else {
-                    this.leftHand = handData;
-                    this.updateHistory('left', screenLandmarks);
+                    // 单人模式：兼容原逻辑
+                    if (handedness.label === 'Left') {
+                        this.rightHand = handData;
+                        this.updateHistory('right', screenLandmarks);
+                        handData.handKey = 'right';
+                    } else {
+                        this.leftHand = handData;
+                        this.updateHistory('left', screenLandmarks);
+                        handData.handKey = 'left';
+                    }
                 }
-                this.drawHand(landmarks, handedness.label);
+
+                this.handsData.push(handData);
+                this.drawHand(landmarks, handData);
             }
+
             this.detectGestures();
             if (!hadHands) this.callbacks.onHandsDetected?.();
         } else if (hadHands) {
@@ -166,19 +247,55 @@ class HandTracker {
     }
 
     detectGestures() {
-        if (this.leftHand) {
-            this.gestures.left = this.analyzeHandGesture(this.leftHand, 'left');
+        if (this.gameMode === 'single') {
+            // 单人模式：原有逻辑
+            if (this.leftHand) {
+                this.gestures.left = this.analyzeHandGesture(this.leftHand, 'left');
+            } else {
+                this.gestures.left = null;
+                if (this.pinchState.left.active) this.endPinch('left');
+            }
+            if (this.rightHand) {
+                this.gestures.right = this.analyzeHandGesture(this.rightHand, 'right');
+            } else {
+                this.gestures.right = null;
+                if (this.pinchState.right.active) this.endPinch('right');
+            }
+            if (this.leftHand && this.rightHand) this.detectClap();
         } else {
-            this.gestures.left = null;
-            if (this.pinchState.left.active) this.endPinch('left');
+            // 双人模式：检测4只手
+            if (this.player1.leftHand) {
+                this.analyzeHandGesture(this.player1.leftHand, 'p1left');
+            } else if (this.pinchState.p1left.active) {
+                this.endPinch('p1left');
+            }
+
+            if (this.player1.rightHand) {
+                this.analyzeHandGesture(this.player1.rightHand, 'p1right');
+            } else if (this.pinchState.p1right.active) {
+                this.endPinch('p1right');
+            }
+
+            if (this.player2.leftHand) {
+                this.analyzeHandGesture(this.player2.leftHand, 'p2left');
+            } else if (this.pinchState.p2left.active) {
+                this.endPinch('p2left');
+            }
+
+            if (this.player2.rightHand) {
+                this.analyzeHandGesture(this.player2.rightHand, 'p2right');
+            } else if (this.pinchState.p2right.active) {
+                this.endPinch('p2right');
+            }
+
+            // 检测每个玩家的双手合十
+            if (this.player1.leftHand && this.player1.rightHand) {
+                this.detectClap(this.player1.leftHand, this.player1.rightHand, 1);
+            }
+            if (this.player2.leftHand && this.player2.rightHand) {
+                this.detectClap(this.player2.leftHand, this.player2.rightHand, 2);
+            }
         }
-        if (this.rightHand) {
-            this.gestures.right = this.analyzeHandGesture(this.rightHand, 'right');
-        } else {
-            this.gestures.right = null;
-            if (this.pinchState.right.active) this.endPinch('right');
-        }
-        if (this.leftHand && this.rightHand) this.detectClap();
     }
 
     analyzeHandGesture(handData, handLabel) {
@@ -234,30 +351,70 @@ class HandTracker {
         });
     }
 
-    detectClap() {
-        const lp = this.getPalmCenter(this.leftHand.landmarks);
-        const rp = this.getPalmCenter(this.rightHand.landmarks);
+    detectClap(leftHandData, rightHandData, playerId) {
+        // 兼容单人模式调用
+        const lh = leftHandData || this.leftHand;
+        const rh = rightHandData || this.rightHand;
+
+        if (!lh || !rh) return;
+
+        const lp = this.getPalmCenter(lh.landmarks);
+        const rp = this.getPalmCenter(rh.landmarks);
         const dist = Utils.distance(lp.x / this.canvasElement.width, lp.y / this.canvasElement.height, rp.x / this.canvasElement.width, rp.y / this.canvasElement.height);
-        if (dist < 0.15 && Date.now() - this.lastGestureTime.both > 900) {
-            if (this.isOpenPalm(this.leftHand.normalizedLandmarks) && this.isOpenPalm(this.rightHand.normalizedLandmarks)) {
-                this.triggerGesture('clap', 'both', { left: this.leftHand.landmarks, right: this.rightHand.landmarks });
+
+        const handKey = playerId ? `p${playerId}both` : 'both';
+        const cooldownTime = this.lastGestureTime[handKey] || 0;
+
+        if (dist < 0.15 && Date.now() - cooldownTime > 900) {
+            if (this.isOpenPalm(lh.normalizedLandmarks) && this.isOpenPalm(rh.normalizedLandmarks)) {
+                const gestureData = { left: lh.landmarks, right: rh.landmarks };
+                if (playerId) {
+                    gestureData.playerId = playerId;
+                }
+                this.triggerGesture('clap', handKey, gestureData);
             }
         }
     }
 
     triggerGesture(type, hand, data) {
         this.lastGestureTime[hand] = Date.now();
-        this.callbacks.onGesture?.({ type, hand, data, timestamp: Date.now() });
+        const gestureEvent = {
+            type,
+            hand,
+            data,
+            timestamp: Date.now()
+        };
+
+        // 从handKey提取playerId（如p1left -> playerId: 1）
+        if (hand.startsWith('p') && hand.length > 1) {
+            const playerNum = parseInt(hand[1]);
+            if (!isNaN(playerNum)) {
+                gestureEvent.playerId = playerNum;
+            }
+        }
+
+        this.callbacks.onGesture?.(gestureEvent);
     }
 
     startPinch(hand, pos) { this.pinchState[hand] = { active: true, startPos: { ...pos } }; this.callbacks.onPinchStart?.(hand, pos); }
     updatePinch(hand, pos) { this.callbacks.onPinchMove?.(hand, pos, this.pinchState[hand].startPos); }
     endPinch(hand) { if (this.pinchState[hand].active) this.callbacks.onPinchEnd?.(hand, this.pinchState[hand].startPos); this.pinchState[hand] = { active: false, startPos: null }; }
 
-    drawHand(landmarks, handedness) {
+    drawHand(landmarks, handData) {
         const conn = [[0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8], [0, 9], [9, 10], [10, 11], [11, 12], [0, 13], [13, 14], [14, 15], [15, 16], [0, 17], [17, 18], [18, 19], [19, 20], [5, 9], [9, 13], [13, 17]];
-        const ctx = this.canvasCtx, color = handedness === 'Left' ? '#00d4ff' : '#ff6b35';
-        ctx.strokeStyle = color; ctx.lineWidth = 3;
+        const ctx = this.canvasCtx;
+
+        // 确定颜色
+        let color;
+        if (this.gameMode === 'coop' && handData.handKey) {
+            color = this.colors[handData.handKey] || '#ffffff';
+        } else {
+            // 单人模式兼容
+            color = handData.handedness === 'Left' ? '#00d4ff' : '#ff6b35';
+        }
+
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
         // 不做代码镜像，因为hand-canvas有CSS scaleX(-1)
         conn.forEach(([i, j]) => { ctx.beginPath(); ctx.moveTo(landmarks[i].x * this.canvasElement.width, landmarks[i].y * this.canvasElement.height); ctx.lineTo(landmarks[j].x * this.canvasElement.width, landmarks[j].y * this.canvasElement.height); ctx.stroke(); });
         landmarks.forEach((lm, idx) => { ctx.beginPath(); ctx.arc(lm.x * this.canvasElement.width, lm.y * this.canvasElement.height, idx === 0 ? 8 : 5, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill(); });

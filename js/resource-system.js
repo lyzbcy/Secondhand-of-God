@@ -73,33 +73,27 @@ class ResourceSystem {
     render(ctx) {
         this.nodes.forEach(node => {
             const config = this.nodeTypes[node.type];
-            let x = node.x, y = node.y;
 
-            // 震动效果
-            if (node.shakeTime > 0) {
-                x += (Math.random() - 0.5) * 8;
-                y += (Math.random() - 0.5) * 8;
-            }
+            // 使用等距渲染器绘制资源节点
+            if (this.game?.isoRenderer) {
+                this.game.isoRenderer.renderResourceNode(ctx, node, config);
+            } else {
+                // 备用渲染
+                let x = node.x, y = node.y;
+                if (node.shakeTime > 0) {
+                    x += (Math.random() - 0.5) * 8;
+                    y += (Math.random() - 0.5) * 8;
+                }
 
-            // 绘制阴影
-            ctx.fillStyle = 'rgba(0,0,0,0.3)';
-            ctx.beginPath();
-            ctx.ellipse(node.x, node.y + node.size * 0.4, node.size * 0.5, node.size * 0.2, 0, 0, Math.PI * 2);
-            ctx.fill();
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.beginPath();
+                ctx.ellipse(node.x, node.y + node.size * 0.4, node.size * 0.5, node.size * 0.2, 0, 0, Math.PI * 2);
+                ctx.fill();
 
-            // 绘制emoji
-            ctx.font = `${node.size}px Arial`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(config.emoji, x, y);
-
-            // 血条
-            if (node.hp < node.maxHp) {
-                const barW = 40, barH = 6;
-                ctx.fillStyle = 'rgba(0,0,0,0.5)';
-                ctx.fillRect(node.x - barW / 2, node.y - node.size / 2 - 15, barW, barH);
-                ctx.fillStyle = '#2ecc71';
-                ctx.fillRect(node.x - barW / 2, node.y - node.size / 2 - 15, barW * (node.hp / node.maxHp), barH);
+                ctx.font = `${node.size}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(config.emoji, x, y);
             }
         });
     }

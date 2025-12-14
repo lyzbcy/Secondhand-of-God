@@ -38,11 +38,87 @@ class Game {
         this.setLoadingProgress(100);
         this.updateLoadingStatus('准备就绪！');
 
+        // 初始化菜单粒子背景
+        this.initMenuParticles();
+
         // 显示开始菜单
         setTimeout(() => {
             document.getElementById('loading-screen').classList.add('hidden');
             document.getElementById('start-menu').classList.remove('hidden');
         }, 500);
+    }
+
+    initMenuParticles() {
+        const canvas = document.getElementById('menu-particles');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        const particles = [];
+        const particleCount = 80;
+
+        const resize = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+        resize();
+        window.addEventListener('resize', resize);
+
+        // 创建粒子
+        for (let i = 0; i < particleCount; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 2 + 0.5,
+                speedX: (Math.random() - 0.5) * 0.3,
+                speedY: (Math.random() - 0.5) * 0.3,
+                opacity: Math.random() * 0.5 + 0.2,
+                hue: Math.random() > 0.5 ? 330 : 50 // 粉色或金色
+            });
+        }
+
+        const animate = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach((p, i) => {
+                p.x += p.speedX;
+                p.y += p.speedY;
+
+                // 边界循环
+                if (p.x < 0) p.x = canvas.width;
+                if (p.x > canvas.width) p.x = 0;
+                if (p.y < 0) p.y = canvas.height;
+                if (p.y > canvas.height) p.y = 0;
+
+                // 绘制粒子
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = `hsla(${p.hue}, 80%, 70%, ${p.opacity})`;
+                ctx.fill();
+
+                // 连接附近粒子
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p2 = particles[j];
+                    const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+                    if (dist < 120) {
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.strokeStyle = `rgba(255, 179, 217, ${0.1 * (1 - dist / 120)})`;
+                        ctx.stroke();
+                    }
+                }
+            });
+
+            this.menuAnimationId = requestAnimationFrame(animate);
+        };
+
+        animate();
+    }
+
+    stopMenuParticles() {
+        if (this.menuAnimationId) {
+            cancelAnimationFrame(this.menuAnimationId);
+        }
     }
 
     async waitForMediaPipe() {

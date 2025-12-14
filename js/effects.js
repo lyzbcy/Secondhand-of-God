@@ -43,6 +43,83 @@ class EffectsSystem {
         }
     }
 
+    // 渲染2.5D背景 - 透视地面和环境粒子
+    renderBackground() {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+
+        // 渐变背景天空
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
+        skyGrad.addColorStop(0, '#0a0a1a');
+        skyGrad.addColorStop(0.5, '#1a1530');
+        skyGrad.addColorStop(1, '#2a1a3a');
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, w, h);
+
+        // 透视地面网格
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 179, 217, 0.08)';
+        ctx.lineWidth = 1;
+
+        const horizon = h * 0.45; // 地平线位置
+        const gridSize = 60;
+        const perspective = 0.7;
+
+        // 横线 (从地平线向下，间距渐大)
+        for (let i = 0; i < 12; i++) {
+            const progress = i / 12;
+            const y = horizon + (h - horizon) * Math.pow(progress, perspective);
+            const alpha = 0.08 * (1 - progress * 0.6);
+            ctx.strokeStyle = `rgba(255, 179, 217, ${alpha})`;
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(w, y);
+            ctx.stroke();
+        }
+
+        // 纵线 (透视收敛到中心)
+        const centerX = w / 2;
+        for (let i = -8; i <= 8; i++) {
+            const bottomX = centerX + i * gridSize;
+            const topX = centerX + i * gridSize * 0.3; // 向中心收敛
+            ctx.beginPath();
+            ctx.moveTo(topX, horizon);
+            ctx.lineTo(bottomX, h);
+            ctx.stroke();
+        }
+
+        ctx.restore();
+
+        // 环境粒子 (漂浮的光点)
+        if (!this.ambientParticles) {
+            this.ambientParticles = [];
+            for (let i = 0; i < 30; i++) {
+                this.ambientParticles.push({
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    size: Math.random() * 2 + 1,
+                    speed: Math.random() * 0.3 + 0.1,
+                    opacity: Math.random() * 0.3 + 0.1,
+                    hue: Math.random() > 0.5 ? 330 : 50
+                });
+            }
+        }
+
+        this.ambientParticles.forEach(p => {
+            p.y -= p.speed;
+            if (p.y < 0) {
+                p.y = h;
+                p.x = Math.random() * w;
+            }
+
+            ctx.beginPath();
+            ctx.fillStyle = `hsla(${p.hue}, 70%, 70%, ${p.opacity})`;
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+        });
+    }
+
     render() {
         const ctx = this.ctx;
 

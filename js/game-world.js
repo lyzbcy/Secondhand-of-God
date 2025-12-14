@@ -3,9 +3,10 @@
  */
 
 class GameWorld {
-    constructor() {
+    constructor(gameMode = 'single') {
         this.canvas = document.getElementById('game-canvas');
         this.ctx = this.canvas.getContext('2d');
+        this.gameMode = gameMode; // 'single' or 'coop'
 
         this.handTracker = null;
         this.effects = null;
@@ -34,7 +35,10 @@ class GameWorld {
         this.waveNumber = 0;
         this.waveActive = false;
 
-        this.crystal = null;
+        // 单人模式：单个水晶
+        // 双人模式：两个水晶（左右）
+        this.crystal = null;  // 单人模式使用
+        this.crystals = [];   // 双人模式使用
         this.crystalHp = 100;
         this.crystalMaxHp = 100;
 
@@ -68,8 +72,13 @@ class GameWorld {
         this.skillTree = new SkillTreeSystem(this);
         this.mapSystem = new MapSystem(this);
         this.arEffects = new AREffectsSystem(this);
+        this.devMenu = new DevMenu(this);
+        this.isoRenderer = new IsometricRenderer(this);
+        this.spriteLoader = new SpriteLoader();
+        this.spriteLoader.init();
 
-        this.handTracker = new HandTracker();
+        // 初始化HandTracker，传入游戏模式
+        this.handTracker = new HandTracker(this.gameMode);
         const video = document.getElementById('camera-video');
         const handCanvas = document.getElementById('hand-canvas');
 
@@ -80,7 +89,29 @@ class GameWorld {
         this.handTracker.on('onPinchMove', (hand, pos) => this.onPinchMove(hand, pos));
         this.handTracker.on('onPinchEnd', (hand, pos) => this.onPinchEnd(hand, pos));
 
-        this.crystal = { x: this.canvas.width / 2, y: this.canvas.height / 2 };
+        // 初始化水晶位置
+        if (this.gameMode === 'coop') {
+            // 双人模式：两个基地
+            this.crystals = [
+                {
+                    x: this.canvas.width * 0.25,
+                    y: this.canvas.height * 0.5,
+                    hp: 100,
+                    maxHp: 100,
+                    playerId: 1
+                },
+                {
+                    x: this.canvas.width * 0.75,
+                    y: this.canvas.height * 0.5,
+                    hp: 100,
+                    maxHp: 100,
+                    playerId: 2
+                }
+            ];
+        } else {
+            // 单人模式：中央单个基地
+            this.crystal = { x: this.canvas.width / 2, y: this.canvas.height / 2 };
+        }
 
         this.resources.init();
         this.towers.init();
@@ -88,6 +119,7 @@ class GameWorld {
         this.factory.init();
         this.skillTree.init();
         this.mapSystem.init();
+        this.devMenu.init();
         this.setupUI();
     }
 
@@ -101,7 +133,15 @@ class GameWorld {
             handCanvas.height = window.innerHeight;
         }
 
-        if (this.crystal) {
+        // 更新水晶位置
+        if (this.gameMode === 'coop' && this.crystals.length > 0) {
+            // 双人模式：更新两个基地位置
+            this.crystals[0].x = this.canvas.width * 0.25;
+            this.crystals[0].y = this.canvas.height * 0.5;
+            this.crystals[1].x = this.canvas.width * 0.75;
+            this.crystals[1].y = this.canvas.height * 0.5;
+        } else if (this.crystal) {
+            // 单人模式：中央
             this.crystal.x = this.canvas.width / 2;
             this.crystal.y = this.canvas.height / 2;
         }
@@ -286,12 +326,14 @@ class GameWorld {
 
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
+        // 摄像头画面作为背景，不绘制遮挡
+
         if (this.isNight) {
-            ctx.fillStyle = 'rgba(0, 0, 30, 0.3)';
+            ctx.fillStyle = 'rgba(20, 10, 40, 0.3)';
             ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         }
 
-        this.renderCrystal(ctx);
+        this.renderCrystals(ctx);
         this.resources.render(ctx);
         this.towers.render(ctx);
         this.enemies.render(ctx);
@@ -300,25 +342,63 @@ class GameWorld {
         this.renderHandInteraction(ctx);
     }
 
-    renderCrystal(ctx) {
-        const { x, y } = this.crystal;
+    renderCrystals(ctx) {
+        if (this.gameMode === 'coop') {
+            // 双人模式：渲染两个基地
+            this.crystals.forEach((crystal, index) => {
+                this.renderSingleCrystal(ctx, crystal);
 
-        const gradient = ctx.createRadialGradient(x, y, 20, x, y, 80);
-        gradient.addColorStop(0, 'rgba(255, 179, 217, 0.4)');
-        gradient.addColorStop(1, 'rgba(255, 179, 217, 0)');
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(x, y, 80, 0, Math.PI * 2);
-        ctx.fill();
+                // 更新对应的HUD血条
+                const ratio = crystal.hp / crystal.maxHp;
+                if (index === 0) {
+                    // 玩家1基地（左侧）
+                    const hpEl = document.getElementById('crystal-hp-p1');
+                    const barEl = document.getElementById('crystal-health-p1');
+                    if (hpEl) hpEl.textContent = `${Math.ceil(crystal.hp)}/${crystal.maxHp}`;
+                    if (barEl) barEl.style.width = (ratio * 100) + '%';
+                } else {
+                    // 玩家2基地（右侧）
+                    const hpEl = document.getElementById('crystal-hp-p2');
+                    const barEl = document.getElementById('crystal-health-p2');
+                    if (hpEl) hpEl.textContent = `${Math.ceil(crystal.hp)}/${crystal.maxHp}`;
+                    if (barEl) barEl.style.width = (ratio * 100) + '%';
+                }
+            });
+        } else {
+            // 单人模式：渲染单个基地
+            this.renderSingleCrystal(ctx, this.crystal);
 
-        ctx.font = '60px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('💎', x, y);
+            // 更新单人HUD血条
+            const ratio = this.crystalHp / this.crystalMaxHp;
+            const hpEl = document.getElementById('crystal-hp');
+            const barEl = document.getElementById('crystal-health');
+            if (hpEl) hpEl.textContent = `${Math.ceil(this.crystalHp)}/${this.crystalMaxHp}`;
+            if (barEl) barEl.style.width = (ratio * 100) + '%';
+        }
+    }
 
-        const ratio = this.crystalHp / this.crystalMaxHp;
-        document.getElementById('crystal-health').style.width = (ratio * 100) + '%';
-        document.getElementById('crystal-hp').textContent = `${Math.ceil(this.crystalHp)}/${this.crystalMaxHp}`;
+    renderSingleCrystal(ctx, crystal) {
+        if (!crystal) return;
+
+        // 使用等距渲染器绘制水晶
+        if (this.isoRenderer) {
+            this.isoRenderer.renderCrystal(ctx, crystal);
+        } else {
+            // 备用渲染
+            const { x, y } = crystal;
+            const gradient = ctx.createRadialGradient(x, y, 20, x, y, 80);
+            gradient.addColorStop(0, 'rgba(255, 179, 217, 0.4)');
+            gradient.addColorStop(1, 'rgba(255, 179, 217, 0)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(x, y, 80, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.font = '60px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('💎', x, y);
+        }
     }
 
     renderHandInteraction(ctx) {
@@ -372,14 +452,29 @@ class GameWorld {
         }
     }
 
-    damageCrystal(amount) {
-        this.crystalHp -= amount;
-        this.effects.shake(10, 0.2);
-        this.effects.flash('#ff0000');
+    damageCrystal(amount, crystalIndex = 0) {
+        if (this.gameMode === 'coop') {
+            // 双人模式：伤害指定的基地
+            if (crystalIndex >= 0 && crystalIndex < this.crystals.length) {
+                this.crystals[crystalIndex].hp -= amount;
+                this.effects.shake(10, 0.2);
+                this.effects.flash('#ff0000');
 
-        if (this.crystalHp <= 0) {
-            this.crystalHp = 0;
-            this.gameOver();
+                if (this.crystals[crystalIndex].hp <= 0) {
+                    this.crystals[crystalIndex].hp = 0;
+                    this.gameOver();
+                }
+            }
+        } else {
+            // 单人模式：原有逻辑
+            this.crystalHp -= amount;
+            this.effects.shake(10, 0.2);
+            this.effects.flash('#ff0000');
+
+            if (this.crystalHp <= 0) {
+                this.crystalHp = 0;
+                this.gameOver();
+            }
         }
     }
 
