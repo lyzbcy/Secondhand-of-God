@@ -16,6 +16,13 @@ class GameWorld {
         this.cards = null;
         this.rlAgent = null;  // 强化学习智能体
 
+        // New systems
+        this.craftsman = null;
+        this.factory = null;
+        this.skillTree = null;
+        this.mapSystem = null;
+        this.arEffects = null;
+
         this.isRunning = false;
         this.isPaused = false;
         this.isGameOver = false;
@@ -37,6 +44,8 @@ class GameWorld {
         this.chopMultiplier = 1;
         this.mineMultiplier = 1;
         this.handRangeMultiplier = 1;
+        this.punchDamageMulti = 1;
+        this.ultimateAbilities = new Set();
 
         this.lastTime = 0;
     }
@@ -53,6 +62,13 @@ class GameWorld {
         this.cards = new CardSystem(this);
         this.rlAgent = new RLAgent();  // 初始化 RL 智能体
 
+        // Initialize new systems
+        this.craftsman = new CraftsmanSystem(this);
+        this.factory = new FactorySystem(this);
+        this.skillTree = new SkillTreeSystem(this);
+        this.mapSystem = new MapSystem(this);
+        this.arEffects = new AREffectsSystem(this);
+
         this.handTracker = new HandTracker();
         const video = document.getElementById('camera-video');
         const handCanvas = document.getElementById('hand-canvas');
@@ -68,6 +84,10 @@ class GameWorld {
 
         this.resources.init();
         this.towers.init();
+        this.craftsman.init();
+        this.factory.init();
+        this.skillTree.init();
+        this.mapSystem.init();
         this.setupUI();
     }
 
@@ -230,7 +250,20 @@ class GameWorld {
         this.day++;
 
         document.getElementById('day-count').textContent = `第 ${this.day} 天`;
-        this.showCardSelectionWithPause();
+        // Use skill tree instead of card selection
+        this.showSkillSelectionWithPause();
+    }
+
+    showSkillSelectionWithPause() {
+        // 暂停游戏
+        this.isPaused = true;
+        // Use skill tree system
+        if (this.skillTree) {
+            this.skillTree.showSelection(1);
+        } else {
+            // Fallback to legacy card system
+            this.cards.showCardSelection();
+        }
     }
 
     resumeAfterCard() {

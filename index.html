@@ -56,6 +56,10 @@
                     <span class="btn-icon">📖</span>
                     <span class="btn-text">操作教程</span>
                 </button>
+                <button id="btn-tutorial-level" class="menu-btn">
+                    <span class="btn-icon">🎓</span>
+                    <span class="btn-text">教学关卡</span>
+                </button>
                 <button id="btn-settings" class="menu-btn">
                     <span class="btn-icon">⚙️</span>
                     <span class="btn-text">设置</span>
@@ -215,13 +219,17 @@
                 <span class="crystal-hp" id="crystal-hp">100/100</span>
             </div>
 
-            <!-- Ultimate Gauge -->
-            <div class="hud-ultimate">
-                <div class="ultimate-icon">⚡</div>
-                <div class="ultimate-bar">
-                    <div class="ultimate-progress" id="ultimate-progress"></div>
+            <!-- Ultimate Gauge - 圆形环设计 -->
+            <div class="ultimate-ring-container" id="ultimate-container">
+                <svg class="ultimate-ring" viewBox="0 0 100 100">
+                    <circle class="ring-bg" cx="50" cy="50" r="42"></circle>
+                    <circle class="ring-progress" id="ultimate-ring-progress" cx="50" cy="50" r="42"></circle>
+                </svg>
+                <div class="ultimate-center">
+                    <span class="ultimate-icon">⚡</span>
+                    <span class="ultimate-percent" id="ultimate-percent">0%</span>
                 </div>
-                <span class="ultimate-hint">双手合十释放</span>
+                <span class="ultimate-hint">🙏 合十释放</span>
             </div>
         </div>
 
@@ -396,6 +404,14 @@
     <script src="js/combat-system.js"></script>
     <script src="js/card-system.js"></script>
     <script src="js/rl-agent.js"></script>
+    <!-- New Systems -->
+    <script src="js/tutorial-system.js"></script>
+    <script src="js/craftsman-system.js"></script>
+    <script src="js/factory-system.js"></script>
+    <script src="js/face-tracker.js"></script>
+    <script src="js/map-system.js"></script>
+    <script src="js/skill-tree.js"></script>
+    <script src="js/ar-effects.js"></script>
     <script src="js/game-world.js"></script>
     <script src="js/main.js"></script>
 </body>

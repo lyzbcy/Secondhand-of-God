@@ -98,9 +98,15 @@ class Game {
     setupMenuButtons() {
         document.getElementById('btn-start')?.addEventListener('click', () => this.startGame());
         document.getElementById('btn-tutorial')?.addEventListener('click', () => this.showTutorial());
+        document.getElementById('btn-tutorial-level')?.addEventListener('click', () => this.startTutorialLevel());
         document.getElementById('btn-settings')?.addEventListener('click', () => this.showSettings());
         document.getElementById('btn-save-settings')?.addEventListener('click', () => this.saveSettings());
         document.getElementById('btn-refresh-cameras')?.addEventListener('click', () => this.refreshCameraList());
+
+        // Initialize tutorial system
+        this.tutorialSystem = new TutorialSystem();
+        this.tutorialSystem.init();
+        this.tutorialSystem.on('complete', () => this.startGame());
     }
 
     async refreshCameraList() {
@@ -188,6 +194,13 @@ class Game {
     showTutorial() {
         document.getElementById('tutorial-modal')?.classList.remove('hidden');
         this.goToTutorialSlide(0);
+    }
+
+    startTutorialLevel() {
+        // Start interactive tutorial level
+        if (this.tutorialSystem) {
+            this.tutorialSystem.start();
+        }
     }
 
     showSettings() {

@@ -188,13 +188,28 @@ class CombatSystem {
         this.ultimateCharge = Math.min(this.ultimateMax, this.ultimateCharge + amount);
         if (this.ultimateCharge >= this.ultimateMax && !this.isUltimateReady) {
             this.isUltimateReady = true;
-            document.querySelector('.hud-ultimate')?.classList.add('ready');
+            document.getElementById('ultimate-container')?.classList.add('ready');
         }
     }
 
     updateUltimateUI() {
-        const progress = document.getElementById('ultimate-progress');
-        if (progress) progress.style.width = (this.ultimateCharge / this.ultimateMax * 100) + '%';
+        const percent = Math.floor(this.ultimateCharge / this.ultimateMax * 100);
+
+        // 更新环形进度 (stroke-dashoffset计算)
+        // 圆周长 = 2πr = 2 * 3.14159 * 42 ≈ 264
+        const circumference = 264;
+        const offset = circumference * (1 - percent / 100);
+
+        const ring = document.getElementById('ultimate-ring-progress');
+        if (ring) {
+            ring.style.strokeDashoffset = offset;
+        }
+
+        // 更新百分比文字
+        const percentText = document.getElementById('ultimate-percent');
+        if (percentText) {
+            percentText.textContent = percent + '%';
+        }
     }
 
     borrowFire(towerX, towerY, handX, handY) {

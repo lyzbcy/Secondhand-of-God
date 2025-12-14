@@ -202,6 +202,198 @@ class EffectsSystem {
         }
     }
 
+    // ===================================
+    // 高精度电影级粒子特效
+    // ===================================
+
+    // 创建光晕效果
+    createGlowEffect(x, y, color = '#00d4ff', radius = 100, duration = 1) {
+        const particles = 30;
+        for (let i = 0; i < particles; i++) {
+            const angle = (Math.PI * 2 * i) / particles;
+            const dist = Math.random() * radius;
+            this.particles.push({
+                x: x + Math.cos(angle) * dist,
+                y: y + Math.sin(angle) * dist,
+                vx: Math.cos(angle) * 20,
+                vy: Math.sin(angle) * 20,
+                size: 2 + Math.random() * 4,
+                color,
+                life: duration,
+                maxLife: duration,
+                alpha: 1,
+                shrink: 0.99,
+                glow: true
+            });
+        }
+    }
+
+    // 创建闪电链特效
+    createLightningBolt(x1, y1, x2, y2, segments = 8) {
+        const points = [{ x: x1, y: y1 }];
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+
+        for (let i = 1; i < segments; i++) {
+            const t = i / segments;
+            const offsetX = (Math.random() - 0.5) * 60;
+            const offsetY = (Math.random() - 0.5) * 60;
+            points.push({
+                x: x1 + dx * t + offsetX,
+                y: y1 + dy * t + offsetY
+            });
+        }
+        points.push({ x: x2, y: y2 });
+
+        // 创建闪电段
+        for (let i = 0; i < points.length - 1; i++) {
+            this.trails.push({
+                x1: points[i].x,
+                y1: points[i].y,
+                x2: points[i + 1].x,
+                y2: points[i + 1].y,
+                color: '#ffd700',
+                width: 4 + Math.random() * 3,
+                life: 0.15,
+                maxLife: 0.15,
+                isLightning: true
+            });
+
+            // 添加光晕粒子
+            this.particles.push({
+                x: points[i].x,
+                y: points[i].y,
+                vx: 0, vy: 0,
+                size: 8 + Math.random() * 5,
+                color: '#fff',
+                life: 0.2,
+                maxLife: 0.2,
+                alpha: 1,
+                shrink: 0.9
+            });
+        }
+    }
+
+    // 创建魔法阵
+    createMagicCircle(x, y, radius = 150, duration = 2) {
+        const rings = 3;
+        const particlesPerRing = 40;
+
+        for (let ring = 0; ring < rings; ring++) {
+            const ringRadius = radius * (0.5 + ring * 0.25);
+            const hue = 200 + ring * 40;
+
+            for (let i = 0; i < particlesPerRing; i++) {
+                const angle = (Math.PI * 2 * i) / particlesPerRing;
+                this.particles.push({
+                    x: x + Math.cos(angle) * ringRadius,
+                    y: y + Math.sin(angle) * ringRadius,
+                    vx: Math.cos(angle + Math.PI / 2) * 30,
+                    vy: Math.sin(angle + Math.PI / 2) * 30,
+                    size: 3 + ring,
+                    color: `hsl(${hue}, 80%, 60%)`,
+                    life: duration,
+                    maxLife: duration,
+                    alpha: 1,
+                    shrink: 0.995,
+                    rotateAround: { x, y, radius: ringRadius, speed: (ring + 1) * 2 }
+                });
+            }
+        }
+
+        // 中心光柱
+        for (let i = 0; i < 20; i++) {
+            this.particles.push({
+                x: x + (Math.random() - 0.5) * 20,
+                y: y,
+                vx: (Math.random() - 0.5) * 10,
+                vy: -200 - Math.random() * 100,
+                size: 4 + Math.random() * 6,
+                color: '#fff',
+                life: duration * 0.6,
+                maxLife: duration * 0.6,
+                alpha: 1,
+                shrink: 0.98
+            });
+        }
+    }
+
+    // 终极技能特效
+    createUltimateEffect(x, y, type = 'rage') {
+        const colors = {
+            rage: '#ff4757',
+            fortress: '#3498db',
+            goldRain: '#ffd700'
+        };
+        const color = colors[type] || '#fff';
+
+        // 大规模爆炸
+        this.createExplosion(x, y, color, 50);
+        this.createMagicCircle(x, y, 200, 1.5);
+        this.createGlowEffect(x, y, color, 150, 1);
+
+        // 全屏闪光
+        this.flash(color);
+        this.shake(20, 0.5);
+
+        // 环形冲击波
+        for (let i = 0; i < 60; i++) {
+            const angle = (Math.PI * 2 * i) / 60;
+            this.particles.push({
+                x, y,
+                vx: Math.cos(angle) * 400,
+                vy: Math.sin(angle) * 400,
+                size: 8,
+                color,
+                life: 0.8,
+                maxLife: 0.8,
+                alpha: 1,
+                shrink: 0.95
+            });
+        }
+    }
+
+    // 环境氛围粒子
+    createAmbientParticles(canvasWidth, canvasHeight, count = 20) {
+        for (let i = 0; i < count; i++) {
+            this.particles.push({
+                x: Math.random() * canvasWidth,
+                y: Math.random() * canvasHeight,
+                vx: (Math.random() - 0.5) * 20,
+                vy: -10 - Math.random() * 20,
+                size: 1 + Math.random() * 2,
+                color: `hsl(${200 + Math.random() * 60}, 70%, 70%)`,
+                life: 3 + Math.random() * 2,
+                maxLife: 5,
+                alpha: 0.5,
+                shrink: 1,
+                ambient: true
+            });
+        }
+    }
+
+    // 黄金雨效果
+    createGoldRain(canvasWidth, count = 50) {
+        for (let i = 0; i < count; i++) {
+            setTimeout(() => {
+                this.particles.push({
+                    x: Math.random() * canvasWidth,
+                    y: -20,
+                    vx: (Math.random() - 0.5) * 30,
+                    vy: 150 + Math.random() * 100,
+                    size: 10 + Math.random() * 8,
+                    color: '#ffd700',
+                    life: 3,
+                    maxLife: 3,
+                    alpha: 1,
+                    shrink: 0.99,
+                    gravity: 50,
+                    isGold: true
+                });
+            }, i * 30);
+        }
+    }
+
     // 清除所有效果
     clear() {
         this.particles = [];
